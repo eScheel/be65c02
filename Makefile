@@ -1,3 +1,8 @@
 build:
-	vasm6502_oldstyle -Fbin -dotdir -wdc02 -o rom.bin src/main.asm
+	ca65 src/main.asm
+	ld65 src/main.o -C be6502.cfg
+
+clean:
+	rm -rv src/main.o a.out
+
 
