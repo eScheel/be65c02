@@ -6,21 +6,28 @@ counter = $1000
 .segment "START"
 RESET:
     sei             ; Disable Interrupts.
+    cld             ; ...
     ldx #$ff
     txs             ; Initialize the stack pointer.
     jsr VIA_INIT
     jsr ACIA_INIT
-    cli            ; Enable Interrupts.
-
-;===============================================================================
 MAIN:
+    cli            ; Enable Interrupts.
     stz counter
+    ldx #0
+PRINTS:
+    lda str_hello,x
+    beq MAIN_LOOP
+    jsr ACIA_SEND
+    inx
+    jmp PRINTS
 MAIN_LOOP:
-    inc counter
     lda counter
     sta VIA_PORTA
-    ldx #4
+    ldx #10
     jsr VIA_WAIT
+    inc counter
+    beq HALT
     jmp MAIN_LOOP
 
 ;===============================================================================
@@ -44,6 +51,11 @@ HALT_LOOP:
 .include "lib.inc"
 
 ;===============================================================================
+str_hello:
+    .byte "Hello, World!"
+    .byte $0D
+    .byte $0A
+    .byte $00
 str_halt:
     .byte "System Halted ..."
     .byte $00

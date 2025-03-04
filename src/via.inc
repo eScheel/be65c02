@@ -30,21 +30,22 @@ VIA_INIT:
     rts
 
 ;===============================================================================
+; Caller must put iteration count in X register. X = 20 = 1sec
 VIA_WAIT:
     pha
-RESET_COUNTER:
+NEXT_ITERATION:
     lda #$50
     sta VIA_T2CL
     lda #$C3            ; C350 = 50,000 MicroSeconds or .05 seconds
     sta VIA_T2CH
-WAIT_LOOP:
+WAIT_COUNTER:
     lda VIA_IFR         ; Check IFR register to determine source.
     and #%00100000      ; ...
-    beq WAIT_LOOP
+    beq WAIT_COUNTER
     lda VIA_T2CL        ; Ack the interrupt.
-    dex                 ; Get ready for next iteration.
-    beq WAIT_DONE
-    jmp RESET_COUNTER
-WAIT_DONE:
+    dex                 ; Dex for next iteration if not done.
+    beq WAIT_FINISHED
+    jmp NEXT_ITERATION
+WAIT_FINISHED:
     pla
     rts

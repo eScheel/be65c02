@@ -13,6 +13,7 @@ ACIA_INIT:
     rts
 
 ;===============================================================================
+; Caller must put data to send in A register.
 ACIA_SEND:
     pha
     phx
@@ -28,11 +29,11 @@ TX_DELAY:           ; Since the 6551 has a bug, we need to manually delay.
     rts
 
 ;===============================================================================
+; Data byte received will be put in A register.
 ACIA_RECV:
 RX_WAIT:
     lda ACIA_STATUS
     and #%00001000
     beq RX_WAIT
     lda ACIA_DATA
-    jsr ACIA_SEND       ; ECHO
     rts
