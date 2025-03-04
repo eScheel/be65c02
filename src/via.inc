@@ -18,8 +18,33 @@ VIA_IER   = $400E
 VIA_INIT:
     lda #$ff
     sta VIA_DDRA    ; Set all pins in VIA_PORTA to output.
+    stz VIA_PCR     ; All negative edge.
+    lda #%01000000  ; T1 free-run, T2 one-shot, no SR, no Latch
+    sta VIA_ACR
+    lda #$0E        ; Initialize continious timer for program wait function.
+    sta VIA_T1CL
+    lda #$27        ; 270E + 2cycles = 10,000 MicroSeconds or .01 seconds
+    sta VIA_T1CH
+    lda #%11010000  ; Set , T1 , CB1
+    sta VIA_IER
     rts
 
 ;===============================================================================
 VIA_WAIT:
+    pha
+RESET_COUNTER:
+    lda #$50
+    sta VIA_T2CL
+    lda #$C3            ; C350 = 50,000 MicroSeconds or .05 seconds
+    sta VIA_T2CH
+WAIT_LOOP:
+    lda VIA_IFR         ; Check IFR register to determine source.
+    and #%00100000      ; ...
+    beq WAIT_LOOP
+    lda VIA_T2CL        ; Ack the interrupt.
+    dex                 ; Get ready for next iteration.
+    beq WAIT_DONE
+    jmp RESET_COUNTER
+WAIT_DONE:
+    pla
     rts

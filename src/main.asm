@@ -1,5 +1,7 @@
 .setcpu "65C02"
 
+counter = $1000
+
 ;===============================================================================
 .segment "START"
 RESET:
@@ -8,14 +10,17 @@ RESET:
     txs             ; Initialize the stack pointer.
     jsr VIA_INIT
     jsr ACIA_INIT
-    ;cli            ; Enable Interrupts.
+    cli            ; Enable Interrupts.
 
 ;===============================================================================
 MAIN:
-    lda #%10101010
-    sta VIA_PORTA
+    stz counter
 MAIN_LOOP:
-    jsr ACIA_RECV
+    inc counter
+    lda counter
+    sta VIA_PORTA
+    ldx #4
+    jsr VIA_WAIT
     jmp MAIN_LOOP
 
 ;===============================================================================
@@ -33,6 +38,7 @@ HALT_LOOP:
     jmp HALT_LOOP
 
 ;===============================================================================
+.include "irq.inc"
 .include "via.inc"
 .include "acia.inc"
 .include "lib.inc"
@@ -46,4 +52,4 @@ str_halt:
 .segment "VECTORS"
     .word $0000
     .word RESET
-    .word $0000
+    .word IRQ_HANDLER
