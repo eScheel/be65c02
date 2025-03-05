@@ -12,11 +12,17 @@ IRQ_HANDLER:
 
 IRQ_TIMER:
     ; TODO
+IRQ_TIMER_DONE:
     bit VIA_T1CL        ; Clear int flag.
     jmp IRQ_FINISHED
 
 IRQ_SERIAL:
-    ; TODO
+    lda ACIA_STATUS     ; Let's double check on status reg to see if we do have data.
+    and #%00001000
+    beq IRQ_SERIAL_DONE ; bit3 = 0 = Not full. No data.
+    lda ACIA_DATA
+    sta inbyte
+IRQ_SERIAL_DONE:
     lda VIA_PORTB       ; Ack the interrupt.
     jmp IRQ_FINISHED
 
