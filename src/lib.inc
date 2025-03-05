@@ -29,30 +29,27 @@ BIN_TO_HEX:
     pha
     phx
     jsr ZERO_CONVERSION
-
     ldx #0              ; conversion[0]
-    lda value   
+    lda value           ; Load original value. 
+    lsr                 ; Shift the bits to only get top 4 bits in value.
     lsr
     lsr
     lsr
-    lsr
-    jsr NIBBLE_TO_HEX
-    sta conversion,x
-    
+    jsr NIBBLE_TO_HEX   ; Convert it.
+    sta conversion,x    ; Add it to the return string.   
     inx                 ; conversion[1]
-    lda value
-    jsr NIBBLE_TO_HEX
-    sta conversion,x
-
+    lda value           ; Load original value again. No need to shift for top bits.
+    jsr NIBBLE_TO_HEX   ; Convert it.
+    sta conversion,x    ; Add it to the next position in return string.
     plx
     pla
     rts
-    
+
 NIBBLE_TO_HEX:
     and #$0F            ; Mask to get the lower 4 bits (single nibble)
     cmp #10             ; Is it 0-9 or A-F?
     bmi IS_DIGIT        ; If < 10, it's a digit
-    adc #6              ; Adjust for ASCII 'A' (carry is clear)
+    adc #6              ; Adjust for ASCII 'A' (carry is clear?)
 IS_DIGIT:
     adc #$30            ; Convert to ASCII ('0' or 'A'-'F')
     rts

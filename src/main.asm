@@ -24,25 +24,21 @@ RESET:
 
 ;===============================================================================
 MAIN:
-    stz counter
     jsr ZERO_VALUE
+    ldy #0
 MAIN_LOOP:
-    lda counter
-    sta VIA_PORTA
+    lda $8000,y
     sta value
     jsr BIN_TO_HEX
-    ldx #0
-PRINTS:
-    lda conversion,x
-    beq PRINTS_DONE
+    lda conversion
     jsr ACIA_PRINTC
-    inx
-    jmp PRINTS
-PRINTS_DONE:
-    ldx #20
+    lda conversion + 1
+    jsr ACIA_PRINTC
+    lda #' '
+    jsr ACIA_PRINTC
+    ldx #10
     jsr VIA_WAIT
-    inc counter
-    jsr ACIA_PRINTNL
+    iny
     jmp MAIN_LOOP
 
 ;===============================================================================
