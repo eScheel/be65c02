@@ -44,8 +44,8 @@ WAIT_COUNTER:
     beq WAIT_COUNTER
     lda VIA_T2CL        ; Ack the interrupt.
     dex                 ; Dex for next iteration if not done.
-    beq WAIT_FINISHED
+    beq COUNTER_FINISHED
     jmp NEXT_ITERATION
-WAIT_FINISHED:
+COUNTER_FINISHED:
     pla
     rts
