@@ -24,11 +24,11 @@ BIN_TO_DEC:
     rts
 
 ;===============================================================================
-; This will convert an 8bit binary value to an 8bit hex value.
+; This will convert an 8bit binary value to a 2byte hexstr conversion.
 BIN_TO_HEX:
     pha
     phx
-    jsr ZERO_CONVERSION
+    jsr ZERO_CONVERSION ; Zero out the conversion bytes.
     ldx #0              ; conversion[0]
     lda value           ; Load original value. 
     lsr                 ; Shift the bits to only get top 4 bits in value.
