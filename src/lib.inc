@@ -25,13 +25,12 @@ ZERO_CONVERSION:
     rts
 
 ;===============================================================================
-BIN_TO_DEC: ; This will convert up to 16bit value to a Xchar decimal string.
+BIN_TO_DEC: ; This will convert up to 16bit value to a 6char decimal string.
     jsr ZERO_CONVERSION
-btds_divide:
-    jsr ZERO_MOD10
-    ;clc                    
+BTDS_DIVIDE:
+    jsr ZERO_MOD10                
     ldx #16
-btds_divloop:
+BTDS_DIVLOOP:
     rol value                   ; Rotate Quotient.
     rol value + 1
     rol mod10                   ; Rotate Remainder.
@@ -42,27 +41,27 @@ btds_divloop:
     tay
     lda mod10 + 1
     sbc #0
-    bcc btds_ignore_result
+    bcc BTDS_IGNORE_RESULT
     sty mod10                   ; Restore the low byte since we were able to subtract.
     sta mod10 + 1
-btds_ignore_result:
+BTDS_IGNORE_RESULT:
     dex
-    bne btds_divloop            ; We have not looped 16 times ...
+    bne BTDS_DIVLOOP            ; We have not looped 16 times ...
     rol value                   ; Shift the last bit of the Quotient.
     rol value + 1
     lda mod10
     clc
     adc #'0'                    ; "0" + x = Ascii Value.
-    jsr btds_pushc
+    jsr BTDS_PUSHC
     lda value                   ; Check if we need to divide again.
     ora value + 1               ; If everything is zero, then A will be zero.
-    bne btds_divide             ; If not zero, then we are not done dividing.
+    bne BTDS_DIVIDE             ; If not zero, then we are not done dividing.
     rts
 
-btds_pushc:
+BTDS_PUSHC:
     pha                         ; Push new first character onto stack.
     ldy #0
-pushc_loop:
+BTDS_PUSHC_LOOP:
     lda conversion,y            ; Get character on string and put into X
     tax
     pla
@@ -70,7 +69,7 @@ pushc_loop:
     iny
     txa
     pha                         ; Push character from string onto stack.
-    bne pushc_loop
+    bne BTDS_PUSHC_LOOP
     pla                         ; Pull off null terminator for string.
     sta conversion, y
     rts

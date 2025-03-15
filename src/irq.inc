@@ -11,7 +11,7 @@ IRQ_HANDLER:
     jmp IRQ_FINISHED
 
 IRQ_TIMER:
-    ; TODO
+    inc ticks
 IRQ_TIMER_DONE:
     bit VIA_T1CL        ; Clear int flag.
     jmp IRQ_FINISHED

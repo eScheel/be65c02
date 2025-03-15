@@ -35,6 +35,11 @@ ACIA_PRINTNL:
     jsr ACIA_PRINTC
     rts
 
+ACIA_PRINTSP:
+    lda #' '
+    jsr ACIA_PRINTC
+    rts
+
 ;===============================================================================
 ACIA_GETC:  ; Data byte received will be put in A register.
 RX_WAIT:

@@ -1,7 +1,8 @@
 .setcpu "65C02"
 
-inbyte = $200
-counter = $1000
+ticks   = $00
+inbyte  = $01
+counter = $200
 
 ;===============================================================================
 .segment "START"
@@ -30,13 +31,23 @@ MAIN_LOOP:
     sta value
     jsr BIN_TO_DEC
     ldy #0
-PRINT_LOOP:
+PRINTD_LOOP:
     lda conversion,y
-    beq PRINT_DONE
+    beq PRINTH
     jsr ACIA_PRINTC
     iny
-    jmp PRINT_LOOP
-PRINT_DONE:
+    jmp PRINTD_LOOP
+PRINTH:
+    jsr ACIA_PRINTSP
+    jsr ACIA_PRINTSP
+    lda counter
+    sta value
+    jsr BIN_TO_HEX
+    lda conversion
+    jsr ACIA_PRINTC
+    lda conversion + 1
+    jsr ACIA_PRINTC
+PRINTH_DONE:
     inc counter
     ldx #15
     jsr VIA_WAIT
