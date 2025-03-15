@@ -30,8 +30,7 @@ VIA_INIT:
     rts
 
 ;===============================================================================
-; Caller must put iteration count in X register. X = 20 = 1sec
-VIA_WAIT:
+VIA_WAIT:   ; Caller must put iteration count in X register. X = 20 = 1sec
     pha
 NEXT_ITERATION:
     lda #$50

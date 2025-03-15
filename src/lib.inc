@@ -1,7 +1,13 @@
-value = $3000           ; Fill in before calling string conversion functions.    
-conversion = $3004      ; 6byte return for the value above.
+mod10 = $3000
+value = $3002           ; Fill in before calling string conversion functions.    
+conversion = $3005      ; 6byte return for the value above.
 
 ;===============================================================================
+ZERO_MOD10:
+    stz mod10
+    stz mod10 + 1
+    rts
+
 ZERO_VALUE:
     stz value
     stz value + 1
@@ -9,7 +15,6 @@ ZERO_VALUE:
     stz value + 3
     rts
 
-;===============================================================================
 ZERO_CONVERSION:
     stz conversion
     stz conversion + 1
@@ -20,12 +25,58 @@ ZERO_CONVERSION:
     rts
 
 ;===============================================================================
-BIN_TO_DEC:
+BIN_TO_DEC: ; This will convert up to 16bit value to a Xchar decimal string.
+    jsr ZERO_CONVERSION
+btds_divide:
+    jsr ZERO_MOD10
+    ;clc                    
+    ldx #16
+btds_divloop:
+    rol value                   ; Rotate Quotient.
+    rol value + 1
+    rol mod10                   ; Rotate Remainder.
+    rol mod10 + 1
+    sec                         ; Set carry bit for subtracting for borrowing.
+    lda mod10
+    sbc #10
+    tay
+    lda mod10 + 1
+    sbc #0
+    bcc btds_ignore_result
+    sty mod10                   ; Restore the low byte since we were able to subtract.
+    sta mod10 + 1
+btds_ignore_result:
+    dex
+    bne btds_divloop            ; We have not looped 16 times ...
+    rol value                   ; Shift the last bit of the Quotient.
+    rol value + 1
+    lda mod10
+    clc
+    adc #'0'                    ; "0" + x = Ascii Value.
+    jsr btds_pushc
+    lda value                   ; Check if we need to divide again.
+    ora value + 1               ; If everything is zero, then A will be zero.
+    bne btds_divide             ; If not zero, then we are not done dividing.
+    rts
+
+btds_pushc:
+    pha                         ; Push new first character onto stack.
+    ldy #0
+pushc_loop:
+    lda conversion,y            ; Get character on string and put into X
+    tax
+    pla
+    sta conversion,y            ; Pull character off stack and add it to the string.
+    iny
+    txa
+    pha                         ; Push character from string onto stack.
+    bne pushc_loop
+    pla                         ; Pull off null terminator for string.
+    sta conversion, y
     rts
 
 ;===============================================================================
-; This will convert an 8bit binary value to a 2byte hexstr conversion.
-BIN_TO_HEX:
+BIN_TO_HEX: ; This will convert an 8bit binary value to a 2char hex string.
     pha
     phx
     jsr ZERO_CONVERSION ; Zero out the conversion bytes.
@@ -54,7 +105,6 @@ IS_DIGIT:
     adc #$30            ; Convert to ASCII ('0' or 'A'-'F')
     rts
 
-
-
-
-
+;===============================================================================
+BIN_TO_BIN: ; This will convert ...
+    rts

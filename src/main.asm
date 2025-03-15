@@ -1,6 +1,7 @@
 .setcpu "65C02"
 
 inbyte = $200
+counter = $1000
 
 ;===============================================================================
 .segment "START"
@@ -11,7 +12,7 @@ RESET:
     txs             ; Initialize the stack pointer.
     jsr VIA_INIT
     jsr ACIA_INIT
-    stz inbyte
+    stz inbyte      ; Clear the input byte.
     cli             ; Clear interrupt disable bit.
     jmp MAIN
 
@@ -22,36 +23,38 @@ RESET:
 
 ;===============================================================================
 MAIN:
-    jsr ZERO_VALUE
-    ldy #0
+    stz counter
 MAIN_LOOP:
-    lda $8000,y
+    lda counter
+    sta VIA_PORTA
     sta value
-    jsr BIN_TO_HEX
-    lda conversion
+    jsr BIN_TO_DEC
+    ldy #0
+PRINT_LOOP:
+    lda conversion,y
+    beq PRINT_DONE
     jsr ACIA_PRINTC
-    lda conversion + 1
-    jsr ACIA_PRINTC
-    lda #' '
-    jsr ACIA_PRINTC
-    ldx #10
-    jsr VIA_WAIT
     iny
+    jmp PRINT_LOOP
+PRINT_DONE:
+    inc counter
+    ldx #15
+    jsr VIA_WAIT
+    jsr ACIA_PRINTNL
     jmp MAIN_LOOP
 
 ;===============================================================================
 HALT:
-    sei
+    sei                 ; Disable Interrupts.
     ldx #$0
 HALT_PRINTS:
-    lda str_halt,x
+    lda str_halt,x      ; Print halted message.
     beq HALT_LOOP
     jsr ACIA_PRINTC
     inx
     jmp HALT_PRINTS
 HALT_LOOP:
-    nop
-    jmp HALT_LOOP
+    jmp HALT_LOOP       ; Jump forever doing nothing.
 
 ;===============================================================================
 str_hello:
