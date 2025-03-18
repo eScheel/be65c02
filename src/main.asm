@@ -40,6 +40,8 @@ PRINTD_LOOP:
 PRINTH:
     jsr ACIA_PRINTSP
     jsr ACIA_PRINTSP
+    lda #'$'
+    jsr ACIA_PRINTC
     lda counter
     sta value
     jsr BIN_TO_HEX
