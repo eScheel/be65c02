@@ -49,6 +49,30 @@ PRINTH:
     jsr ACIA_PRINTC
     lda conversion + 1
     jsr ACIA_PRINTC
+PRINTTB:
+    jsr ACIA_PRINTSP
+    jsr ACIA_PRINTSP
+    lda #'%'
+    jsr ACIA_PRINTC
+    lda counter
+    sta value
+    jsr BIN_TO_BIN
+    lda conversion
+    jsr ACIA_PRINTC
+    lda conversion + 1
+    jsr ACIA_PRINTC
+    lda conversion + 2
+    jsr ACIA_PRINTC
+    lda conversion + 3
+    jsr ACIA_PRINTC
+    lda conversion + 4
+    jsr ACIA_PRINTC
+    lda conversion + 5
+    jsr ACIA_PRINTC
+    lda conversion + 6
+    jsr ACIA_PRINTC
+    lda conversion + 7
+    jsr ACIA_PRINTC
 PRINTH_DONE:
     inc counter
     ldx #15

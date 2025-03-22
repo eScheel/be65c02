@@ -22,6 +22,8 @@ ZERO_CONVERSION:
     stz conversion + 3
     stz conversion + 4
     stz conversion + 5
+    stz conversion + 6
+    stz conversion + 7
     rts
 
 ;===============================================================================
@@ -105,5 +107,28 @@ IS_DIGIT:
     rts
 
 ;===============================================================================
-BIN_TO_BIN: ; This will convert ...
+BIN_TO_BIN: ; Converts 8-bit binary in value to binary string in conversion
+    jsr ZERO_CONVERSION         ; Clear the conversion buffer
+    ldx #0                      ; Index for conversion buffer
+    lda #$80                    ; Start with MSB mask: 1000 0000
+    sta mod10                   ; Reuse mod10 as temp mask
+    ldy value                   ; Copy value to Y for bit testing
+
+BTBI_LOOP:
+    lda mod10                   ; Load mask
+    and value                   ; AND with value
+    beq STORE_0                 ; If result is 0, store '0'
+    lda #$31                    ; ASCII '1'
+    bne STORE_BIT               ; Unconditional jump
+STORE_0:
+    lda #$30                    ; ASCII '0'
+STORE_BIT:
+    sta conversion,x            ; Store bit as ASCII
+    inx                         ; Move to next output char
+    lda mod10
+    lsr                         ; Shift mask right (next bit)
+    sta mod10
+    bne BTBI_LOOP               ; Repeat until mask becomes 0
+    lda #0
+    sta conversion,x            ; Null-terminate string
     rts
