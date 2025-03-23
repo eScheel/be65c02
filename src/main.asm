@@ -21,23 +21,23 @@ RESET:
 .include "irq.inc"
 .include "via.inc"
 .include "acia.inc"
+.include "mem.inc"
 .include "lib.inc"
 
 MAIN:
     lda #$00
     sta addr_lo
-    lda #$00
+    lda #$80
     sta addr_hi
     ldy #$00
     sty sz_counter
-    ldy #$10
+    ldy #$08
     sty sz_counter + 1
     jsr MEMORY_DUMP
-MAIN_LOOP:
-    jmp MAIN_LOOP
 
 ;===============================================================================
 HALT:
+    jsr ACIA_PRINTNL
     sei                 ; Disable Interrupts.
     ldx #$0
 HALT_PRINTS:
