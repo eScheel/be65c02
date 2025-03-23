@@ -1,6 +1,6 @@
 mod10 = $3000
 value = $3002           ; Fill in before calling string conversion functions.    
-conversion = $3005      ; 6byte return for the value above.
+conversion = $3005      ; 8byte return for the value above.
 
 ;===============================================================================
 ZERO_MOD10:
@@ -27,6 +27,7 @@ ZERO_CONVERSION:
     rts
 
 ;===============================================================================
+; Most code taken from Ben Eater.
 BIN_TO_DEC: ; This will convert up to 16bit value to a 6char decimal string.
     jsr ZERO_CONVERSION
 BTDS_DIVIDE:
@@ -77,6 +78,7 @@ BTDS_PUSHC_LOOP:
     rts
 
 ;===============================================================================
+; AI helped me write this.
 BIN_TO_HEX: ; This will convert an 8bit binary value to a 2char hex string.
     pha
     phx
@@ -107,6 +109,7 @@ IS_DIGIT:
     rts
 
 ;===============================================================================
+; AI wrote this.
 BIN_TO_BIN: ; Converts 8-bit binary in value to binary string in conversion
     jsr ZERO_CONVERSION         ; Clear the conversion buffer
     ldx #0                      ; Index for conversion buffer

@@ -2,7 +2,6 @@
 
 ticks   = $00
 inbyte  = $01
-counter = $200
 
 ;===============================================================================
 .segment "START"
@@ -24,60 +23,7 @@ RESET:
 
 ;===============================================================================
 MAIN:
-    stz counter
 MAIN_LOOP:
-    lda counter
-    sta VIA_PORTA
-    sta value
-    jsr BIN_TO_DEC
-    ldy #0
-PRINTD_LOOP:
-    lda conversion,y
-    beq PRINTH
-    jsr ACIA_PRINTC
-    iny
-    jmp PRINTD_LOOP
-PRINTH:
-    jsr ACIA_PRINTSP
-    jsr ACIA_PRINTSP
-    lda #'$'
-    jsr ACIA_PRINTC
-    lda counter
-    sta value
-    jsr BIN_TO_HEX
-    lda conversion
-    jsr ACIA_PRINTC
-    lda conversion + 1
-    jsr ACIA_PRINTC
-PRINTTB:
-    jsr ACIA_PRINTSP
-    jsr ACIA_PRINTSP
-    lda #'%'
-    jsr ACIA_PRINTC
-    lda counter
-    sta value
-    jsr BIN_TO_BIN
-    lda conversion
-    jsr ACIA_PRINTC
-    lda conversion + 1
-    jsr ACIA_PRINTC
-    lda conversion + 2
-    jsr ACIA_PRINTC
-    lda conversion + 3
-    jsr ACIA_PRINTC
-    lda conversion + 4
-    jsr ACIA_PRINTC
-    lda conversion + 5
-    jsr ACIA_PRINTC
-    lda conversion + 6
-    jsr ACIA_PRINTC
-    lda conversion + 7
-    jsr ACIA_PRINTC
-PRINTH_DONE:
-    inc counter
-    ldx #15
-    jsr VIA_WAIT
-    jsr ACIA_PRINTNL
     jmp MAIN_LOOP
 
 ;===============================================================================
