@@ -16,8 +16,6 @@ VIA_IER   = $400E
 
 ;===============================================================================
 VIA_INIT:
-    lda #$ff
-    sta VIA_DDRA    ; Set all pins in VIA_PORTA to output.
     stz VIA_PCR     ; All negative edge.
     lda #%01000000  ; T1 free-run, T2 one-shot, no SR, no Latch
     sta VIA_ACR

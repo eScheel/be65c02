@@ -1,7 +1,9 @@
 .setcpu "65C02"
-
+.segment "ZERO"
 ticks   = $00
 inbyte  = $01
+addr_lo = $02
+addr_hi = $03
 
 ;===============================================================================
 .segment "START"
@@ -21,8 +23,16 @@ RESET:
 .include "acia.inc"
 .include "lib.inc"
 
-;===============================================================================
 MAIN:
+    lda #$00
+    sta addr_lo
+    lda #$00
+    sta addr_hi
+    ldy #$00
+    sty sz_counter
+    ldy #$10
+    sty sz_counter + 1
+    jsr MEMORY_DUMP
 MAIN_LOOP:
     jmp MAIN_LOOP
 

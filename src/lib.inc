@@ -1,6 +1,7 @@
-mod10 = $3000
-value = $3002           ; Fill in before calling string conversion functions.    
+mod10 = $3000           ; 2byte
+value = $3002           ; 2byte. Fill in before calling string conversion functions.    
 conversion = $3005      ; 8byte return for the value above.
+sz = $300D
 
 ;===============================================================================
 ZERO_MOD10:
@@ -29,6 +30,9 @@ ZERO_CONVERSION:
 ;===============================================================================
 ; Most code taken from Ben Eater.
 BIN_TO_DEC: ; This will convert up to 16bit value to a 6char decimal string.
+    pha
+    phx
+    phy
     jsr ZERO_CONVERSION
 BTDS_DIVIDE:
     jsr ZERO_MOD10                
@@ -59,6 +63,9 @@ BTDS_IGNORE_RESULT:
     lda value                   ; Check if we need to divide again.
     ora value + 1               ; If everything is zero, then A will be zero.
     bne BTDS_DIVIDE             ; If not zero, then we are not done dividing.
+    ply
+    plx
+    pla
     rts
 
 BTDS_PUSHC:
@@ -111,6 +118,9 @@ IS_DIGIT:
 ;===============================================================================
 ; AI wrote this.
 BIN_TO_BIN: ; Converts 8-bit binary in value to binary string in conversion
+    pha
+    phx
+    phy
     jsr ZERO_CONVERSION         ; Clear the conversion buffer
     ldx #0                      ; Index for conversion buffer
     lda #$80                    ; Start with MSB mask: 1000 0000
@@ -132,6 +142,25 @@ STORE_BIT:
     lsr                         ; Shift mask right (next bit)
     sta mod10
     bne BTBI_LOOP               ; Repeat until mask becomes 0
-    lda #0
-    sta conversion,x            ; Null-terminate string
+    ply
+    plx
+    pla
+    rts
+
+;===============================================================================
+; Size must be stored in Y when calling. max_size = 255
+; Byte must be stored in value when calling.
+; Addr must be stored in addr_fn when calling.
+MEMORY_SET:
+    pha
+MEMORY_SET_LOOP:
+    lda value
+    sta (addr_lo),Y
+    dey
+    beq MEMORY_SET_DONE
+    jmp MEMORY_SET_LOOP
+MEMORY_SET_DONE:
+    lda value
+    sta (addr_lo),Y
+    pla
     rts
