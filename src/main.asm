@@ -25,8 +25,6 @@ RESET:
 .include "lib.inc"
 
 MAIN:
-    jsr ACIA_GETC
-    jmp MAIN
 MAIN_LOOP:
     lda inbyte
     beq MAIN_LOOP

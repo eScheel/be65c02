@@ -47,5 +47,4 @@ RX_WAIT:
     and #%00001000
     beq RX_WAIT
     lda ACIA_DATA
-    jsr ACIA_PRINTC     ; Echo
     rts
