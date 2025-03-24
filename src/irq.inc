@@ -5,9 +5,9 @@ IRQ_HANDLER:
     lda VIA_IFR
     and #%01000000      ; T1
     bne IRQ_TIMER
-    lda VIA_IFR
-    and #%00010000      ; cb1
-    bne IRQ_SERIAL
+;    lda VIA_IFR
+;    and #%00000010      ; ca1 / 232
+;    bne IRQ_SERIAL
     jmp IRQ_FINISHED
 
 IRQ_TIMER:
@@ -21,9 +21,9 @@ IRQ_SERIAL:
     and #%00001000
     beq IRQ_SERIAL_DONE ; bit3 = 0 = Not full. No data.
     lda ACIA_DATA
-    sta inbyte
+    ;jsr ACIA_PRINTC
 IRQ_SERIAL_DONE:
-    lda VIA_PORTB       ; Ack the interrupt.
+    lda VIA_PORTA       ; Ack the interrupt.
     jmp IRQ_FINISHED
 
 

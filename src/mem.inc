@@ -2,7 +2,7 @@ sz_counter = $200 ; 2bytes
 
 ;===============================================================================
 ; Fill in addr_n when calling.
-; Put size in sz_counter when calling.
+; Put size in sz_counter word when calling.
 MEMORY_DUMP:
     pha
     phx
@@ -53,5 +53,23 @@ DEC_TKR:
 MEMORY_DUMP_DONE:
     ply
     plx
+    pla
+    rts
+
+;===============================================================================
+; Size must be stored in Y when calling. max_size = 255
+; Byte must be stored in value when calling.
+; Addr must be stored in addr_fn when calling.
+MEMORY_SET:
+    pha
+MEMORY_SET_LOOP:
+    lda value
+    sta (addr_lo),Y
+    dey
+    beq MEMORY_SET_DONE
+    jmp MEMORY_SET_LOOP
+MEMORY_SET_DONE:
+    lda value
+    sta (addr_lo),Y
     pla
     rts

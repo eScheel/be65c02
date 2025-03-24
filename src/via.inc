@@ -19,11 +19,11 @@ VIA_INIT:
     stz VIA_PCR     ; All negative edge.
     lda #%01000000  ; T1 free-run, T2 one-shot, no SR, no Latch
     sta VIA_ACR
-    lda #$0E        ; Initialize continious timer for program wait function.
+    lda #$0E        ; Initialize continious timer.
     sta VIA_T1CL
     lda #$27        ; 270E + 2cycles = 10,000 MicroSeconds or .01 seconds
     sta VIA_T1CH
-    lda #%11010000  ; Set , T1 , CB1
+    lda #%11000010  ; Set , T1 , CA1
     sta VIA_IER
     rts
 

@@ -25,15 +25,14 @@ RESET:
 .include "lib.inc"
 
 MAIN:
-    lda #$00
-    sta addr_lo
-    lda #$80
-    sta addr_hi
-    ldy #$00
-    sty sz_counter
-    ldy #$08
-    sty sz_counter + 1
-    jsr MEMORY_DUMP
+    jsr ACIA_GETC
+    jmp MAIN
+MAIN_LOOP:
+    lda inbyte
+    beq MAIN_LOOP
+    jsr ACIA_PRINTC
+    stz inbyte
+    jmp MAIN_LOOP
 
 ;===============================================================================
 HALT:
