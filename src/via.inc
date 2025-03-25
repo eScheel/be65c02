@@ -20,13 +20,13 @@ VIA_INIT:
     sta VIA_DDRA
     sta VIA_DDRB
     stz VIA_PCR     ; All negative edge.
-    lda #%01000000  ; T1 free-run, T2 one-shot, no SR, no Latch
+    lda #%01001100  ; T1 free-run, T2 one-shot, SR under ext clk, no Latch
     sta VIA_ACR
     lda #$0E        ; Initialize continious timer.
     sta VIA_T1CL
     lda #$27        ; 270E + 2cycles = 10,000 MicroSeconds or .01 seconds
     sta VIA_T1CH
-    lda #%11000010  ; Set , T1 , CA1
+    lda #%11000110  ; Set , T1 , SR, CA1
     sta VIA_IER
     rts
 

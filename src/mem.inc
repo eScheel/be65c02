@@ -28,7 +28,7 @@ DUMP_LOOP:
     jsr ACIA_PRINTSP
     ldx #16
 DATA_LOOP:
-    lda (addr_lo)           ; I guess this will auto locad addr_hi as part if the address?
+    lda (addr_lo)           ; I guess this will auto load addr_hi as part if the address?
     sta value
     jsr BIN_TO_HEX          ; Convert contents of above address to hex.
     lda conversion          ; Print it out.

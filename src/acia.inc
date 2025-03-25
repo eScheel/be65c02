@@ -29,15 +29,19 @@ TX_DELAY:           ; Since the 6551 has a bug, we need to manually delay.
 
 ;===============================================================================
 ACIA_PRINTNL:
+    pha
     lda #$0D            ; CR
     jsr ACIA_PRINTC
     lda #$0A            ; NL
     jsr ACIA_PRINTC
+    pla
     rts
 
 ACIA_PRINTSP:
+    pha
     lda #' '
     jsr ACIA_PRINTC
+    pla
     rts
 
 ;===============================================================================

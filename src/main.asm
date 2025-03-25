@@ -1,9 +1,10 @@
 .setcpu "65C02"
 .segment "ZERO"
-ticks   = $00
-inbyte  = $01
-addr_lo = $02
-addr_hi = $03
+ticks      = $00
+serial_in  = $01    ; Used to comm with user.
+shift_in   = $02    ; Used to comm with arduino board.
+addr_lo    = $03
+addr_hi    = $04
 
 ;===============================================================================
 .segment "START"
@@ -14,23 +15,21 @@ RESET:
     txs             ; Initialize the stack pointer.
     jsr VIA_INIT
     jsr ACIA_INIT
-    stz inbyte      ; Clear the input byte.
     cli             ; Clear interrupt disable bit.
     jmp MAIN
-
 .include "irq.inc"
 .include "via.inc"
 .include "acia.inc"
 .include "mem.inc"
 .include "lib.inc"
 
+;===============================================================================
 MAIN:
-MAIN_LOOP:
-    lda inbyte
-    beq MAIN_LOOP
+    lda serial_in
+    beq MAIN
     jsr ACIA_PRINTC
-    stz inbyte
-    jmp MAIN_LOOP
+    stz serial_in
+    jmp MAIN
 
 ;===============================================================================
 HALT:
