@@ -20,9 +20,9 @@ IRQ_TIMER_DONE:
     jmp IRQ_FINISHED
 
 IRQ_SERIAL:
-    lda ACIA_STATUS     ; This will also ack the 551 interrupt.
-    and #%00001000
-    beq IRQ_SERIAL_DONE ; bit3 = 0 = Not full. No data.
+    lda ACIA_STATUS     ; This will ack the 551 interrupt.
+    ;and #%00001000
+    ;beq IRQ_SERIAL_DONE ; bit3 = 0 = Not full. No data.
     lda ACIA_DATA
     sta serial_in
 IRQ_SERIAL_DONE:
@@ -30,7 +30,7 @@ IRQ_SERIAL_DONE:
     jmp IRQ_FINISHED
 
 IRQ_SHIFT:
-    lda VIA_SHIFT       ; This should also ack the interrupt.
+    lda VIA_SHIFT       ; This should also ack the 6522 interrupt.
     sta shift_in
     jmp IRQ_FINISHED
 

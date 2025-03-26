@@ -1,8 +1,9 @@
 .setcpu "65C02"
-.segment "ZERO"
+
+; Zero Page Variables.
 ticks      = $00
-serial_in  = $01    ; Used to comm with user.
-shift_in   = $02    ; Used to comm with arduino board.
+serial_in  = $01
+shift_in   = $02
 addr_lo    = $03
 addr_hi    = $04
 
@@ -25,11 +26,19 @@ RESET:
 
 ;===============================================================================
 MAIN:
+    ldy #0
+PRINTS:
+    lda str_hello,y
+    beq MAIN_LOOP
+    jsr ACIA_PRINTC
+    iny
+    jmp PRINTS
+MAIN_LOOP:
     lda serial_in
-    beq MAIN
+    beq MAIN_LOOP
     jsr ACIA_PRINTC
     stz serial_in
-    jmp MAIN
+    jmp MAIN_LOOP
 
 ;===============================================================================
 HALT:
