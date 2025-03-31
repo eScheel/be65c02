@@ -115,6 +115,37 @@ IS_DIGIT:
     adc #$30            ; Convert to ASCII ('0' or 'A'-'F')
     rts
 
+;==============================================================================
+HEX_TO_BIN:
+    pha
+    phx
+    jsr ZERO_CONVERSION
+
+    lda value
+    cmp #$61
+    bmi IS_NOT_CHAR0
+    sbc #$26
+IS_NOT_CHAR0:
+    sbc #$2F
+    rol
+    rol
+    rol
+    rol
+    and #$F0
+    sta conversion
+
+    lda value + 1
+    cmp #$61
+    bmi IS_NOT_CHAR1
+    sbc #$26
+IS_NOT_CHAR1:
+    sbc #$2F
+    ora conversion
+    sta conversion
+    plx
+    pla
+    rts
+
 ;===============================================================================
 ; AI wrote this.
 BIN_TO_BIN: ; Converts 8-bit binary in value to binary string in conversion

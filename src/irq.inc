@@ -2,6 +2,7 @@
 IRQ_HANDLER:
     pha
     phx
+    phy
     lda VIA_IFR
     and #%01000000      ; T1
     bne IRQ_TIMER
@@ -15,17 +16,17 @@ IRQ_HANDLER:
 
 IRQ_TIMER:
     inc ticks
-IRQ_TIMER_DONE:
     bit VIA_T1CL        ; Ack the 6522 interrupt.
     jmp IRQ_FINISHED
 
 IRQ_SERIAL:
     lda ACIA_STATUS     ; This will ack the 551 interrupt.
-    ;and #%00001000
-    ;beq IRQ_SERIAL_DONE ; bit3 = 0 = Not full. No data.
     lda ACIA_DATA
+    jsr ACIA_PRINTC     ; Echo the character.
     sta serial_in
-IRQ_SERIAL_DONE:
+    ldy counter_in
+    sta input_string,Y
+    inc counter_in
     lda VIA_PORTA       ; Ack the 6522 interrupt.
     jmp IRQ_FINISHED
 
@@ -35,6 +36,7 @@ IRQ_SHIFT:
     jmp IRQ_FINISHED
 
 IRQ_FINISHED:
+    ply
     plx
     pla
     rti
