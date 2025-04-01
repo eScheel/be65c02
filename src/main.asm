@@ -14,7 +14,7 @@ input_string = $501
 RESET:
     sei             ; Set interrupt disable status.
     cld             ; Clear decimal mode. 
-    ldx #$FF
+    ldx #$ff
     txs             ; Initialize the stack pointer.
     jsr VIA_INIT
     jsr ACIA_INIT
@@ -24,7 +24,6 @@ RESET:
 .include "irq.inc"
 .include "via.inc"
 .include "acia.inc"
-.include "mem.inc"
 .include "lib.inc"
 
 ;===============================================================================
@@ -40,7 +39,7 @@ PROMPT:
     lda #'>'
     jsr ACIA_PRINTC
 MAIN_LOOP:
-    jsr RETURN_PULL     ; io.inc
+    jsr RETURN_PULL
     jmp MAIN_LOOP
 
 ;===============================================================================
@@ -60,6 +59,15 @@ PROCESS_INPUT:
 PROCESS_DONE:
     stz serial_in
     stz counter_in
+    
+    ldy #255
+    lda #$05
+    sta addr_hi
+    lda #$00
+    sta addr_lo
+    sta value
+    jsr MEMORY_SET
+
     jsr ACIA_PRINTNL
     lda #'>'
     jsr ACIA_PRINTC
@@ -113,34 +121,30 @@ PRINT_HELP:
     jmp PRINT_HELP
 
 DUMP:
-    lda #'7'
+    ldx #0
+PRINT_ADDR:
+    lda str_addr,X
+    beq PARSE_ADDR
+    jsr ACIA_PRINTC
+    inx
+    jmp PRINT_ADDR
+PARSE_ADDR:
+    jsr ACIA_GETC
     sta value
-    lda #'0'
+    jsr ACIA_GETC
     sta value + 1
     jsr HEX_TO_BIN
     lda conversion
+    sta addr_hi
+    jsr ACIA_GETC
     sta value
-    jsr BIN_TO_BIN
-    lda #'#'
-    jsr ACIA_PRINTC
-    lda #'%'
-    jsr ACIA_PRINTC
+    jsr ACIA_GETC
+    sta value + 1
+    jsr HEX_TO_BIN
     lda conversion
-    jsr ACIA_PRINTC
-    lda conversion + 1
-    jsr ACIA_PRINTC
-    lda conversion + 2
-    jsr ACIA_PRINTC
-    lda conversion + 3
-    jsr ACIA_PRINTC
-    lda conversion + 4
-    jsr ACIA_PRINTC
-    lda conversion + 5
-    jsr ACIA_PRINTC
-    lda conversion + 6
-    jsr ACIA_PRINTC
-    lda conversion + 7
-    jsr ACIA_PRINTC
+    sta addr_lo
+    jsr ACIA_PRINTNL
+    jsr MEMORY_DUMP
     jmp PARSE_CMD_DONE
 
 HALT:
