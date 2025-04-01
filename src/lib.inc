@@ -1,8 +1,3 @@
-mod10 = $3000           ; 2byte
-value = $3002           ; 2byte. Fill in before calling string conversion functions.    
-conversion = $3005      ; 8byte return for the value above.
-page_counter = $300D    ; 3bytes
-
 ;===============================================================================
 ZERO_MOD10:
     stz mod10
@@ -110,7 +105,7 @@ NIBBLE_TO_HEX:
     and #$0F            ; Mask to get the lower 4 bits (single nibble)
     cmp #10             ; Is it 0-9 or A-F?
     bmi IS_DIGIT        ; If < 10, it's a digit
-    adc #6              ; Adjust for ASCII 'A' (carry is clear?)
+    adc #6              ; Adjust for ASCII 'A' 
 IS_DIGIT:
     adc #$30            ; Convert to ASCII ('0' or 'A'-'F')
     rts

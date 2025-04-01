@@ -20,13 +20,9 @@ IRQ_TIMER:
     jmp IRQ_FINISHED
 
 IRQ_SERIAL:
-    lda ACIA_STATUS     ; This will ack the 551 interrupt.
     lda ACIA_DATA
-    jsr ACIA_PRINTC     ; Echo the character.
-    sta serial_in
-    ldy counter_in
-    sta input_string,Y
-    inc counter_in
+    sta serial_in       ; Save the input byte.
+    lda ACIA_STATUS     ; This will ack the 551 interrupt.
     lda VIA_PORTA       ; Ack the 6522 interrupt.
     jmp IRQ_FINISHED
 
