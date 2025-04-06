@@ -42,6 +42,7 @@ MAIN:
 MAIN_LOOP:
     lda serial_in       ; Do we have any data?
     beq MAIN_LOOP
+    sta VIA_PORTA
     lda #$0D            ; Return key pressed?
     cmp serial_in
     beq PROCESS_INPUT
@@ -77,7 +78,9 @@ PROCESS_INPUT:
     lda #%10001011      ; Disable interrupts on ACIA to not get anymore inputs while processing input.
     sta ACIA_COMMAND
     jsr ACIA_PRINTNL
+
     jsr PARSE_CMD
+    
     stz serial_in
     stz counter_in
     jsr ACIA_PRINTNL
@@ -105,9 +108,18 @@ PARSE_DUMP_LOOP:
     lda str_dump_cmd,X
     beq DUMP
     cmp input_string,X
-    bne PARSE_HALT
+    bne PARSE_RESET
     inx
     jmp PARSE_DUMP_LOOP
+PARSE_RESET:
+    ldx #0
+PARSE_RESET_LOOP:
+    lda str_reset_cmd,X
+    beq RESET_WRAPPER
+    cmp input_string,X
+    bne PARSE_HALT
+    inx
+    jmp PARSE_RESET_LOOP
 PARSE_HALT:
     ldx #0
 PARSE_HALT_LOOP:
@@ -139,6 +151,10 @@ PRINT_HELP:
     jsr ACIA_PRINTC
     inx
     jmp PRINT_HELP
+
+;===============================================================================
+RESET_WRAPPER:
+    jmp RESET
 
 ;===============================================================================
 HALT:
