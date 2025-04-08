@@ -10,7 +10,12 @@ serial_in    = $200
 shift_in     = $201
 counter_in   = $202
 input_string = $203
-;...
+; ...
+uptime_counter = $1000   
+uptime_seconds = $1001   
+uptime_minutes = $1002   
+uptime_hour    = $1003   
+; ...
 mod10        = $3000           
 value        = $3002           
 conversion   = $3005     
@@ -28,6 +33,10 @@ RESET:
     jsr ACIA_PRINTNL
     stz counter_in  ; Initialize the input counter.
     stz serial_in
+    stz uptime_counter
+    stz uptime_hour
+    stz uptime_minutes
+    stz uptime_seconds
     cli             ; Clear interrupt disable bit.
     jmp MAIN
 .include "irq.inc"
@@ -108,9 +117,18 @@ PARSE_DUMP_LOOP:
     lda str_dump_cmd,X
     beq DUMP
     cmp input_string,X
-    bne PARSE_RESET
+    bne PARSE_UPTIME
     inx
     jmp PARSE_DUMP_LOOP
+PARSE_UPTIME:
+    ldx #0
+PARSE_UPTIME_LOOP:
+    lda str_uptime_cmd,X
+    beq DISPLAY_UPTIME_WRAPPER
+    cmp input_string,X
+    bne PARSE_RESET
+    inx
+    jmp PARSE_UPTIME_LOOP
 PARSE_RESET:
     ldx #0
 PARSE_RESET_LOOP:
@@ -155,6 +173,8 @@ PRINT_HELP:
 ;===============================================================================
 RESET_WRAPPER:
     jmp RESET
+DISPLAY_UPTIME_WRAPPER:
+    jmp DISPLAY_UPTIME
 
 ;===============================================================================
 HALT:
@@ -196,6 +216,50 @@ PARSE_ADDR:
     sta addr_lo
     jsr ACIA_PRINTNL
     jsr MEMORY_DUMP
+    jmp PARSE_CMD_DONE
+
+;=================================================================================
+DISPLAY_UPTIME:
+    ldx #0
+UPTIME_PRINTS:         ; Convert uptime_hour to DEC.
+    lda uptime_hour
+    sta value
+    jsr BIN_TO_DEC
+    ldx #0
+UPTIME_HOUR_LOOP:               ; Print uptime_hour.
+    lda conversion,x
+    beq UPTIME_PRINTS2
+    jsr ACIA_PRINTC
+    inx
+    jmp UPTIME_HOUR_LOOP
+UPTIME_PRINTS2:             ; Convert uptime_minutes to DEC.
+    lda #':'
+    jsr ACIA_PRINTC
+    lda uptime_minutes
+    sta value
+    jsr BIN_TO_DEC
+    ldx #0
+UPTIME_MINUTES_LOOP:                ; Print uptime_minutes.
+    lda conversion,x
+    beq UPTIME_PRINTS3
+    jsr ACIA_PRINTC
+    inx
+    jmp UPTIME_MINUTES_LOOP
+UPTIME_PRINTS3:             ; Convert uptime_seconds to DEC.
+    lda #':'
+    jsr ACIA_PRINTC
+    lda uptime_seconds
+    sta value
+    jsr BIN_TO_DEC
+    ldx #0 
+UPTIME_SECONDS_LOOP:                ; Print uptime_seconds
+    lda conversion,x
+    beq UPTIME_PRINTS_DONE
+    jsr ACIA_PRINTC
+    inx
+    jmp UPTIME_SECONDS_LOOP
+UPTIME_PRINTS_DONE:         ; Print CR/LF and done.
+    jsr ACIA_PRINTNL
     jmp PARSE_CMD_DONE
 
 ;===============================================================================

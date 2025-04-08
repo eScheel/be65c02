@@ -16,6 +16,30 @@ IRQ_HANDLER:
 
 IRQ_TIMER:
     inc ticks
+    sec
+    lda ticks
+    sbc uptime_counter
+    cmp #100
+    bcc IRQ_TIMER_DONE         ; Not another second yet.
+    inc uptime_seconds
+    lda uptime_seconds   
+    cmp #60                 ; Have we reached a minute?
+    bne UPDATE_DONE
+    stz uptime_seconds
+    inc uptime_minutes
+    lda uptime_minutes
+    cmp #60                 ; Have we reach a hour?
+    bne UPDATE_DONE
+    stz uptime_minutes
+    inc uptime_hour
+    lda uptime_hour
+    cmp #24                 ; Have we reached a day.
+    bne UPDATE_DONE
+    stz uptime_hour          ; roll-over for now I guess TODO
+UPDATE_DONE:
+    lda ticks
+    sta uptime_counter       ; Reset the counter.
+IRQ_TIMER_DONE:
     bit VIA_T1CL        ; Ack the 6522 interrupt.
     jmp IRQ_FINISHED
 
