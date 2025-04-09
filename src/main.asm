@@ -274,7 +274,7 @@ str_help:
     .byte "dump   - (Dumps contents of memory.)"
     .byte $0D
     .byte $0A
-    .byte "uptime - (Prints time since system has been on.)"
+    .byte "uptime - (Prints time since system reset.)"
     .byte $0D
     .byte $0A
     .byte "reset  - (Jumps to reset label.)"

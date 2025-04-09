@@ -20,7 +20,7 @@ ACIA_PRINTC:    ; Caller must put data to send in A register.
 TX_DELAY:           ; Since the 6551 has a bug, we need to manually delay.
     inx
     txa
-    cmp #100        
+    cmp #200        
     bne TX_DELAY
     plx
     pla
