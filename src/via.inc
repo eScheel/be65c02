@@ -36,7 +36,7 @@ VIA_WAIT:   ; Caller must put iteration count in X register. X = 20 = 1sec
 NEXT_ITERATION:
     lda #$50
     sta VIA_T2CL
-    lda #$C3            ; C350 = 50,000 MicroSeconds or .025 seconds
+    lda #$C3            ; C350 = 50,000 MicroSeconds or .05 seconds
     sta VIA_T2CH
 WAIT_COUNTER:
     lda VIA_IFR         ; Check IFR register to determine source.
