@@ -70,7 +70,7 @@ MAIN_LOOP:
 PROCESS_BACKSPACE:
     lda counter_in      ; Nothing has been typed to delete.
     beq MAIN_LOOP
-    lda serial_in       ; Should hold backspace character.
+    lda serial_in       ; Should hold the backspace character.
     jsr ACIA_PRINTC
     lda #' '            ; Print a blank to emulate backspace.
     jsr ACIA_PRINTC
