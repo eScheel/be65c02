@@ -265,32 +265,18 @@ UPTIME_PRINTS_DONE:         ; Print CR/LF and done.
 ;===============================================================================
 .segment "RODATA"
 str_help:
-    .byte "Possible Command:"
-    .byte $0D
-    .byte $0A
-    .byte "help   - (Prints this message.)"
-    .byte $0D
-    .byte $0A
-    .byte "dump   - (Dumps contents of memory.)"
-    .byte $0D
-    .byte $0A
-    .byte "uptime - (Prints time since system reset.)"
-    .byte $0D
-    .byte $0A
-    .byte "reset  - (Jumps to reset label.)"
-    .byte $0D
-    .byte $0A
-    .byte "halt   - (Halts the CPU.)"
-    .byte $0D
-    .byte $0A
+    .byte "Possible Command:",$0D,$0A
+    .byte "help   - (Prints this message.)",$0D,$0A
+    .byte "dump   - (Dumps contents of memory.)",$0D,$0A
+    .byte "uptime - (Prints time since system reset.)",$0D,$0A
+    .byte "reset  - (Jumps to reset label.)",$0D,$0A
+    .byte "halt   - (Halts the CPU.)",$0D,$0A
     .byte $00
 str_halt:
     .byte "System Halted ..."
     .byte $00
 str_bad_input:
-    .byte "Bad input!"
-    .byte $0D
-    .byte $0A
+    .byte "Bad input!",$0D,$0A
     .byte $00
 str_addr:
     .byte "ADDR >"
