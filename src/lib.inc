@@ -210,6 +210,7 @@ DUMP_LOOP:
 DATA_LOOP:
     lda (addr_lo)           ; Indirect. This will auto load addr_hi as part if the address.
     sta value
+    sta VIA_PORTA
     jsr BIN_TO_HEX          ; Convert contents of above address to hex.
     lda conversion          ; Print it out.
     jsr ACIA_PRINTC

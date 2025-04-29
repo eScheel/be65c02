@@ -86,13 +86,17 @@ PROCESS_INPUT:
     phx
     lda #%10001011      ; Disable interrupts on ACIA to not get anymore inputs while processing input.
     sta ACIA_COMMAND
-    jsr ACIA_PRINTNL
 
+    lda counter_in
+    beq SKIP_PARSE_CMD
+
+    jsr ACIA_PRINTNL
     jsr PARSE_CMD
-    
+
+SKIP_PARSE_CMD:
+    jsr ACIA_PRINTNL
     stz serial_in
     stz counter_in
-    jsr ACIA_PRINTNL
     lda #%10001001      ; Reenable interrupts on ACIA.
     sta ACIA_COMMAND
     plx
@@ -221,12 +225,12 @@ PARSE_ADDR:
 ;=================================================================================
 DISPLAY_UPTIME:
     ldx #0
-UPTIME_PRINTS:         ; Convert uptime_hour to DEC.
+UPTIME_PRINTS:              ; Convert uptime_hour to DEC.
     lda uptime_hour
     sta value
     jsr BIN_TO_DEC
     ldx #0
-UPTIME_HOUR_LOOP:               ; Print uptime_hour.
+UPTIME_HOUR_LOOP:           ; Print uptime_hour.
     lda conversion,x
     beq UPTIME_PRINTS2
     jsr ACIA_PRINTC
@@ -239,7 +243,7 @@ UPTIME_PRINTS2:             ; Convert uptime_minutes to DEC.
     sta value
     jsr BIN_TO_DEC
     ldx #0
-UPTIME_MINUTES_LOOP:                ; Print uptime_minutes.
+UPTIME_MINUTES_LOOP:        ; Print uptime_minutes.
     lda conversion,x
     beq UPTIME_PRINTS3
     jsr ACIA_PRINTC
@@ -252,13 +256,13 @@ UPTIME_PRINTS3:             ; Convert uptime_seconds to DEC.
     sta value
     jsr BIN_TO_DEC
     ldx #0 
-UPTIME_SECONDS_LOOP:                ; Print uptime_seconds
+UPTIME_SECONDS_LOOP:        ; Print uptime_seconds
     lda conversion,x
     beq UPTIME_PRINTS_DONE
     jsr ACIA_PRINTC
     inx
     jmp UPTIME_SECONDS_LOOP
-UPTIME_PRINTS_DONE:         ; Print CR/LF and done.
+UPTIME_PRINTS_DONE:        ; Print CR/LF and done.
     jsr ACIA_PRINTNL
     jmp PARSE_CMD_DONE
 
