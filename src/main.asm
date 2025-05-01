@@ -42,6 +42,7 @@ RESET:
 .include "irq.inc"
 .include "via.inc"
 .include "acia.inc"
+.include "lcd.inc"
 .include "lib.inc"
 
 ;===============================================================================
@@ -86,27 +87,9 @@ PROCESS_INPUT:
     phx
     lda #%10001011      ; Disable interrupts on ACIA to not get anymore inputs while processing input.
     sta ACIA_COMMAND
-
-    lda counter_in
+    lda counter_in      ; Check if return key was pressed first.
     beq SKIP_PARSE_CMD
-
-    jsr ACIA_PRINTNL
-    jsr PARSE_CMD
-
-SKIP_PARSE_CMD:
-    jsr ACIA_PRINTNL
-    stz serial_in
-    stz counter_in
-    lda #%10001001      ; Reenable interrupts on ACIA.
-    sta ACIA_COMMAND
-    plx
-    pla
-    jmp MAIN
-
-;===============================================================================
 PARSE_CMD:
-    pha
-    phx
     ldx #0
 PARSE_HELP:
     lda str_help_cmd,X
@@ -160,9 +143,14 @@ PRINT_BAD_INPUT:
     inx
     jmp PRINT_BAD_INPUT
 PARSE_CMD_DONE:
+SKIP_PARSE_CMD:
+    stz serial_in
+    stz counter_in
+    lda #%10001001      ; Re-enable interrupts on ACIA.
+    sta ACIA_COMMAND
     plx
     pla
-    rts
+    jmp MAIN
 
 ;===============================================================================
 HELP:
@@ -263,7 +251,6 @@ UPTIME_SECONDS_LOOP:        ; Print uptime_seconds
     inx
     jmp UPTIME_SECONDS_LOOP
 UPTIME_PRINTS_DONE:        ; Print CR/LF and done.
-    jsr ACIA_PRINTNL
     jmp PARSE_CMD_DONE
 
 ;===============================================================================
