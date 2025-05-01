@@ -269,7 +269,7 @@ UPTIME_PRINTS_DONE:        ; Print CR/LF and done.
 ;===============================================================================
 .segment "RODATA"
 str_help:
-    .byte "Possible Command:",$0D,$0A
+    .byte "Possible Commands:",$0D,$0A
     .byte "help   - (Prints this message.)",$0D,$0A
     .byte "dump   - (Dumps contents of memory.)",$0D,$0A
     .byte "uptime - (Prints time since system reset.)",$0D,$0A

@@ -181,9 +181,9 @@ MEMORY_DUMP:
     pha
     phx
     phy
-    lda #$FF            ; Fill the variable used to count a page. 512 bytes.
+    lda #$ff            ; Fill the variable used to count a page. 512 bytes.
     sta page_counter
-    lda #$FF
+    lda #$ff
     sta page_counter + 1
     lda #$04            ; ...
     sta page_counter + 2
