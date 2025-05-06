@@ -30,7 +30,6 @@ RESET:
     txs             ; Initialize the stack pointer.
     jsr VIA_INIT
     jsr ACIA_INIT
-    jsr ACIA_PRINTNL
     stz counter_in  ; Initialize the input counter.
     stz serial_in
     stz uptime_counter
@@ -38,11 +37,11 @@ RESET:
     stz uptime_minutes
     stz uptime_seconds
     cli             ; Clear interrupt disable bit.
+    jsr ACIA_PRINTNL
     jmp MAIN
 .include "irq.inc"
 .include "via.inc"
 .include "acia.inc"
-.include "lcd.inc"
 .include "lib.inc"
 
 ;===============================================================================
@@ -102,7 +101,7 @@ PARSE_DUMP:
     ldx #0
 PARSE_DUMP_LOOP:
     lda str_dump_cmd,X
-    beq DUMP
+    beq DUMP_WRAPPER
     cmp input_string,X
     bne PARSE_UPTIME
     inx
@@ -154,6 +153,7 @@ SKIP_PARSE_CMD:
 
 ;===============================================================================
 HELP:
+    jsr ACIA_PRINTNL
     ldx #0
 PRINT_HELP:
     lda str_help,X
@@ -165,6 +165,8 @@ PRINT_HELP:
 ;===============================================================================
 RESET_WRAPPER:
     jmp RESET
+DUMP_WRAPPER:
+    jmp DUMP
 DISPLAY_UPTIME_WRAPPER:
     jmp DISPLAY_UPTIME
 
@@ -184,6 +186,7 @@ HALT_LOOP:
 
 ;===============================================================================
 DUMP:
+    jsr ACIA_PRINTNL
     ldx #0
 PRINT_ADDR:
     lda str_addr,X
@@ -212,6 +215,7 @@ PARSE_ADDR:
 
 ;=================================================================================
 DISPLAY_UPTIME:
+    jsr ACIA_PRINTNL
     ldx #0
 UPTIME_PRINTS:              ; Convert uptime_hour to DEC.
     lda uptime_hour
@@ -251,6 +255,7 @@ UPTIME_SECONDS_LOOP:        ; Print uptime_seconds
     inx
     jmp UPTIME_SECONDS_LOOP
 UPTIME_PRINTS_DONE:        ; Print CR/LF and done.
+    jsr ACIA_PRINTNL
     jmp PARSE_CMD_DONE
 
 ;===============================================================================
