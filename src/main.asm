@@ -134,6 +134,7 @@ PARSE_HALT_LOOP:
     inx
     jmp PARSE_HALT_LOOP
 BAD_INPUT:
+    jsr ACIA_PRINTNL
     ldx #0
 PRINT_BAD_INPUT:
     lda str_bad_input,X
@@ -142,7 +143,6 @@ PRINT_BAD_INPUT:
     inx
     jmp PRINT_BAD_INPUT
 PARSE_CMD_DONE:
-SKIP_PARSE_CMD:
     stz serial_in
     stz counter_in
     lda #%10001001      ; Re-enable interrupts on ACIA.
@@ -150,6 +150,10 @@ SKIP_PARSE_CMD:
     plx
     pla
     jmp MAIN
+
+SKIP_PARSE_CMD:
+    jsr ACIA_PRINTNL
+    jmp PARSE_CMD_DONE
 
 ;===============================================================================
 HELP:
