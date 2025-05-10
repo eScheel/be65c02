@@ -19,7 +19,11 @@ uptime_hour    = $1003
 mod10        = $3000           
 value        = $3002           
 conversion   = $3005     
-page_counter = $300D  
+page_counter = $300D
+; ...
+shift_clock = %00000100
+shift_latch = %00000010
+serial_data  = $2000
 
 ;=================================================================================
 .segment "START"
@@ -140,7 +144,7 @@ PARSE_HALT:
     ldx #0
 PARSE_HALT_LOOP:
     lda str_halt_cmd,X
-    beq HALT
+    beq HALT_WRAPPER
     cmp input_string,X
     bne PARSE_TEST
     inx
@@ -173,10 +177,49 @@ PARSE_CMD_DONE:
     jmp MAIN
 
 ;===============================================================================
+RESET_WRAPPER:
+    jmp RESET
+DISPLAY_UPTIME_WRAPPER:
+    jmp DISPLAY_UPTIME
+HALT_WRAPPER:
+    jmp HALT
+
+;===============================================================================
+;shift_clock = %00000100
+;shift_latch = %00000010
+;shift_data  = %00000001
 TEST:
     jsr ACIA_PRINTNL
-    lda #'0'
-    jsr ACIA_PRINTC
+
+    lda #%11110000      ; I guess whatever I send here needs to be sent backwards.
+    sta VIA_SHIFT
+
+    ldx #8
+TEST_LOOP:      
+    lda VIA_SHIFT       ; Send the current bit of data.
+    and #%00000001
+    sta serial_data
+    sta VIA_PORTB
+
+    lda #shift_clock    ; Send the clock pulse with the current bit of data still.
+    ora serial_data
+    sta VIA_PORTB
+
+    lda #0              ; Toggle clock off. Don't need to worry about data bit.
+    sta VIA_PORTB
+
+    dex                 ; ...
+    beq TEST_DONE
+
+    ror VIA_SHIFT       ; Get ready for next bit.
+    jmp TEST_LOOP
+
+TEST_DONE:
+    lda #shift_latch    ; Toggle the latch
+    sta VIA_PORTB
+    lda #0
+    sta VIA_PORTB
+
     jsr ACIA_PRINTNL
     jmp PARSE_CMD_DONE
 
@@ -190,12 +233,6 @@ PRINT_HELP:
     jsr ACIA_PRINTC
     inx
     jmp PRINT_HELP
-
-;===============================================================================
-RESET_WRAPPER:
-    jmp RESET
-DISPLAY_UPTIME_WRAPPER:
-    jmp DISPLAY_UPTIME
 
 ;===============================================================================
 HALT:
