@@ -46,8 +46,9 @@ RESET:
 
 ;===============================================================================
 MAIN:
-    lda #'>'
+    lda #'|'
     jsr ACIA_PRINTC
+    jsr ACIA_PRINTSP
 MAIN_LOOP:
     lda serial_in       ; Do we have any data?
     beq MAIN_LOOP
@@ -81,6 +82,17 @@ PROCESS_BACKSPACE:
     jmp MAIN_LOOP
 
 ;===============================================================================
+SKIP_PARSE_CMD:         
+    jsr ACIA_PRINTNL
+    jmp PARSE_CMD_DONE
+
+;===============================================================================
+HELP_WRAPPER:
+    jmp HELP
+DUMP_WRAPPER:
+    jmp DUMP
+
+;===============================================================================
 PROCESS_INPUT:
     pha
     phx
@@ -92,7 +104,7 @@ PARSE_CMD:
     ldx #0
 PARSE_HELP:
     lda str_help_cmd,X
-    beq HELP
+    beq HELP_WRAPPER
     cmp input_string,X
     bne PARSE_DUMP
     inx
@@ -130,9 +142,18 @@ PARSE_HALT_LOOP:
     lda str_halt_cmd,X
     beq HALT
     cmp input_string,X
-    bne BAD_INPUT
+    bne PARSE_TEST
     inx
     jmp PARSE_HALT_LOOP
+PARSE_TEST:
+    ldx #0
+PARSE_TEST_LOOP:
+    lda str_test_cmd,X
+    beq TEST
+    cmp input_string,X
+    bne BAD_INPUT
+    inx
+    jmp PARSE_TEST_LOOP
 BAD_INPUT:
     jsr ACIA_PRINTNL
     ldx #0
@@ -151,7 +172,11 @@ PARSE_CMD_DONE:
     pla
     jmp MAIN
 
-SKIP_PARSE_CMD:
+;===============================================================================
+TEST:
+    jsr ACIA_PRINTNL
+    lda #'0'
+    jsr ACIA_PRINTC
     jsr ACIA_PRINTNL
     jmp PARSE_CMD_DONE
 
@@ -169,8 +194,6 @@ PRINT_HELP:
 ;===============================================================================
 RESET_WRAPPER:
     jmp RESET
-DUMP_WRAPPER:
-    jmp DUMP
 DISPLAY_UPTIME_WRAPPER:
     jmp DISPLAY_UPTIME
 
@@ -271,31 +294,26 @@ str_help:
     .byte "uptime - (Prints time since system reset.)",$0D,$0A
     .byte "reset  - (Jumps to reset label.)",$0D,$0A
     .byte "halt   - (Halts the CPU.)",$0D,$0A
+    .byte "test   - (...)",$0D,$0A
     .byte $00
 str_halt:
-    .byte "System Halted ..."
-    .byte $00
+    .byte "System Halted ...",$00
 str_bad_input:
-    .byte "Bad input!",$0D,$0A
-    .byte $00
+    .byte "Bad input!",$0D,$0A,$00
 str_addr:
-    .byte "ADDR >"
-    .byte $00
+    .byte "ADDR >",$00
 str_help_cmd:
-    .byte "help"
-    .byte $00
+    .byte "help",$00
 str_dump_cmd:
-    .byte "dump"
-    .byte $00
+    .byte "dump",$00
 str_uptime_cmd:
-    .byte "uptime"
-    .byte $00
+    .byte "uptime",$00
 str_reset_cmd:
-    .byte "reset"
-    .byte $00
+    .byte "reset",$00
 str_halt_cmd:
-    .byte "halt"
-    .byte $00
+    .byte "halt",$00
+str_test_cmd:
+    .byte "test",$00
 
 ;===============================================================================
 .segment "VECTORS"
