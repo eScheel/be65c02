@@ -30,7 +30,8 @@ BIN_TO_DEC: ; This will convert up to 16bit value to a 6char decimal string.
     phy
     jsr ZERO_CONVERSION
 BTDS_DIVIDE:
-    jsr ZERO_MOD10                
+    jsr ZERO_MOD10 
+    clc                         ; This might not be needed ... idk.
     ldx #16
 BTDS_DIVLOOP:
     rol value                   ; Rotate Quotient.
@@ -210,7 +211,6 @@ DUMP_LOOP:
 DATA_LOOP:
     lda (addr_lo)           ; Indirect. This will auto load addr_hi as part if the address.
     sta value
-    sta VIA_PORTA
     jsr BIN_TO_HEX          ; Convert contents of above address to hex.
     lda conversion          ; Print it out.
     jsr ACIA_PRINTC

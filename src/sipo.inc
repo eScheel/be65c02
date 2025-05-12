@@ -22,7 +22,7 @@ SO_LOOP:
     ror VIA_SHIFT       ; Get ready for next bit.
     jmp SO_LOOP
 SO_DONE:
-    lda #shift_latch    ; Toggle the latch
+    lda #shift_latch    ; Toggle the latch.
     sta VIA_PORTB
     lda #0
     sta VIA_PORTB
