@@ -1,5 +1,21 @@
 .setcpu "65C02"
 
+; break equal far.
+.macro bef TARGET       ; beq has a range limit.
+.local SKIP_BEQ
+    bne SKIP_BEQ
+    jmp TARGET
+SKIP_BEQ:
+.endmacro
+
+; break not equal far.
+.macro bnf TARGET       ; bne also has a rangte limit.
+.local SKIP_BNE
+    beq SKIP_BNE
+    jmp TARGET
+SKIP_BNE:
+.endmacro
+
 ; Zero Page Variables.
 ticks   = $00
 addr_lo = $01
@@ -11,15 +27,16 @@ shift_in     = $201
 counter_in   = $202
 input_string = $203
 ; ...
-uptime_counter = $1000   
-uptime_seconds = $1001   
-uptime_minutes = $1002   
-uptime_hour    = $1003   
+uptime_counter = $303   
+uptime_seconds = $304   
+uptime_minutes = $305   
+uptime_hour    = $306   
 ; ...
-mod10        = $2000           
-value        = $2002           
-conversion   = $2005     
-page_counter = $200D
+mod10        = $307           
+value        = $309           
+conversion   = $30d
+; ...    
+page_counter = $1000
 
 ;=================================================================================
 .segment "START"
@@ -36,8 +53,8 @@ RESET:
     stz uptime_hour
     stz uptime_minutes
     stz uptime_seconds
-    cli                     ; Clear interrupt disable bit.
     jsr ACIA_PRINTNL
+    cli                     ; Clear interrupt disable bit.
     jmp MAIN
 .include "irq.inc"
 .include "via.inc"
@@ -69,6 +86,11 @@ MAIN_LOOP:
     jmp MAIN_LOOP
 
 ;===============================================================================
+SKIP_PARSE_CMD:         
+    jsr ACIA_PRINTNL
+    jmp PARSE_CMD_DONE
+
+;===============================================================================
 PROCESS_BACKSPACE:
     lda counter_in      ; Nothing has been typed to delete.
     beq MAIN_LOOP
@@ -83,17 +105,6 @@ PROCESS_BACKSPACE:
     jmp MAIN_LOOP
 
 ;===============================================================================
-HELP_WRAPPER:
-    jmp HELP
-DUMP_WRAPPER:
-    jmp DUMP
-
-;===============================================================================
-SKIP_PARSE_CMD:         
-    jsr ACIA_PRINTNL
-    jmp PARSE_CMD_DONE
-
-;===============================================================================
 PROCESS_INPUT:
     pha
     phx
@@ -101,52 +112,52 @@ PROCESS_INPUT:
     sta ACIA_COMMAND
     lda counter_in      ; Check if return key was pressed first.
     beq SKIP_PARSE_CMD
-PARSE_CMD:
+PARSE_CMD:              ; Parse input string.
     ldx #0
-PARSE_HELP:
+PARSE_HELP:             ; help
     lda str_help_cmd,X
-    beq HELP_WRAPPER
+    bef HELP
     cmp input_string,X
     bne PARSE_DUMP
     inx
     jmp PARSE_HELP
-PARSE_DUMP:
+PARSE_DUMP:             ; dump
     ldx #0
 PARSE_DUMP_LOOP:
     lda str_dump_cmd,X
-    beq DUMP_WRAPPER
+    bef DUMP
     cmp input_string,X
     bne PARSE_UPTIME
     inx
     jmp PARSE_DUMP_LOOP
-PARSE_UPTIME:
+PARSE_UPTIME:           ; uptime
     ldx #0
 PARSE_UPTIME_LOOP:
     lda str_uptime_cmd,X
-    beq DISPLAY_UPTIME_WRAPPER
+    bef DISPLAY_UPTIME
     cmp input_string,X
     bne PARSE_RESET
     inx
     jmp PARSE_UPTIME_LOOP
-PARSE_RESET:
+PARSE_RESET:            ; reset
     ldx #0
 PARSE_RESET_LOOP:
     lda str_reset_cmd,X
-    beq RESET_WRAPPER
+    bef RESET
     cmp input_string,X
     bne PARSE_HALT
     inx
     jmp PARSE_RESET_LOOP
-PARSE_HALT:
+PARSE_HALT:             ; halt
     ldx #0
 PARSE_HALT_LOOP:
     lda str_halt_cmd,X
-    beq HALT_WRAPPER
+    bef HALT
     cmp input_string,X
     bne PARSE_TEST
     inx
     jmp PARSE_HALT_LOOP
-PARSE_TEST:
+PARSE_TEST:             ; test
     ldx #0
 PARSE_TEST_LOOP:
     lda str_test_cmd,X
@@ -155,7 +166,7 @@ PARSE_TEST_LOOP:
     bne BAD_INPUT
     inx
     jmp PARSE_TEST_LOOP
-BAD_INPUT:
+BAD_INPUT:              ; Command not found.
     jsr ACIA_PRINTNL
     ldx #0
 PRINT_BAD_INPUT:
@@ -172,14 +183,6 @@ PARSE_CMD_DONE:
     plx
     pla
     jmp MAIN
-
-;===============================================================================
-RESET_WRAPPER:
-    jmp RESET
-DISPLAY_UPTIME_WRAPPER:
-    jmp DISPLAY_UPTIME
-HALT_WRAPPER:
-    jmp HALT
 
 ;===============================================================================
 TEST:
@@ -246,7 +249,7 @@ PARSE_ADDR:
 ;=================================================================================
 DISPLAY_UPTIME:
     jsr ACIA_PRINTNL
-    ldx #0
+    jsr ZERO_VALUE
 UPTIME_PRINTS:              ; Convert uptime_hour to DEC.
     lda uptime_hour
     sta value

@@ -20,7 +20,7 @@ IRQ_TIMER:
     lda ticks
     sbc uptime_counter
     cmp #100
-    bcc IRQ_TIMER_DONE         ; Not another second yet.
+    bcc IRQ_TIMER_DONE      ; Not another second yet.
     inc uptime_seconds
     lda uptime_seconds   
     cmp #60                 ; Have we reached a minute?
@@ -35,7 +35,7 @@ IRQ_TIMER:
     lda uptime_hour
     cmp #24                 ; Have we reached a day.
     bne UPDATE_DONE
-    stz uptime_hour          ; roll-over for now I guess TODO
+    stz uptime_hour          ; roll-over for now I guess TODO: Account for Days eventually.
 UPDATE_DONE:
     lda ticks
     sta uptime_counter       ; Reset the counter.

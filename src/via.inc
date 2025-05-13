@@ -16,8 +16,9 @@ VIA_IER   = $400E
 
 ;===============================================================================
 VIA_INIT:
-    lda #$ff
+    lda #$ff        ; %11111111
     sta VIA_DDRA
+    lda #$07        ; %00000111
     sta VIA_DDRB
     stz VIA_PCR     ; All negative edge.
     lda #%01001100  ; T1 free-run, T2 one-shot, SR under ext clk, no Latch
