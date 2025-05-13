@@ -70,7 +70,8 @@ MAIN:
 MAIN_LOOP:
     lda serial_in       ; Do we have any data?
     beq MAIN_LOOP
-    sta VIA_PORTA
+    sta VIA_SHIFT
+    jsr SHIFT_OUT
     lda #$0D            ; Return key pressed?
     cmp serial_in
     beq PROCESS_INPUT
