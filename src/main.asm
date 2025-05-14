@@ -70,8 +70,6 @@ MAIN:
 MAIN_LOOP:
     lda serial_in       ; Do we have any data?
     beq MAIN_LOOP
-    sta VIA_SHIFT
-    jsr SHIFT_OUT
     lda #$0D            ; Return key pressed?
     cmp serial_in
     beq PROCESS_INPUT
@@ -188,8 +186,9 @@ PARSE_CMD_DONE:
 ;===============================================================================
 TEST:
     jsr ACIA_PRINTNL
-    lda #'0'
-    jsr ACIA_PRINTC
+    lda uptime_seconds
+    sta VIA_SHIFT
+    jsr SHIFT_OUT
     jsr ACIA_PRINTNL
     jmp PARSE_CMD_DONE
 
