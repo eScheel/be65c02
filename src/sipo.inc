@@ -4,6 +4,8 @@ shift_bit   = $3000
 
 ;===============================================================================
 ; Byte to shift out must be stored in VIA_SHIFT before calling.
+; TODO: Copy your byte into a RAM variable (e.g. shift_buf: .res 1), 
+;        then do lda shift_buf / ror shift_buf instead of poking $400A(VIA_SHIFT).
 SHIFT_OUT:
     ldx #8              ; 8 bits to shift out.
 SO_LOOP:      

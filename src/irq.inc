@@ -9,9 +9,9 @@ IRQ_HANDLER:
     lda VIA_IFR
     and #%00000010      ; ca1 / 232
     bne IRQ_SERIAL
-    lda VIA_INIT
+    lda VIA_IFR
     and #%00000100      ; SR
-    jmp IRQ_SHIFT
+    bne IRQ_SHIFT
     jmp IRQ_FINISHED
 
 IRQ_TIMER:
@@ -56,6 +56,7 @@ IRQ_SHIFT:
     jmp IRQ_FINISHED
 
 IRQ_FINISHED:
+    lda VIA_IFR
     ply
     plx
     pla

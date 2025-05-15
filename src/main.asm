@@ -32,9 +32,9 @@ uptime_seconds = $304
 uptime_minutes = $305   
 uptime_hour    = $306   
 ; ...
-mod10        = $307           
-value        = $309           
-conversion   = $30d
+mod10        = $307       ; 2 bytes    
+value        = $309       ; 4 bytes    
+conversion   = $30d       ; 8 bytes
 ; ...    
 page_counter = $1000
 
@@ -221,13 +221,13 @@ HALT_LOOP:
 DUMP:
     jsr ACIA_PRINTNL
     ldx #0
-PRINT_ADDR:
+PRINT_ADDR:             ; Print out "ADDR >" Prompt.
     lda str_addr,X
     beq PARSE_ADDR
     jsr ACIA_PRINTC
     inx
     jmp PRINT_ADDR
-PARSE_ADDR:
+PARSE_ADDR:             ; Parse the actual address.
     jsr ACIA_GETC
     sta value
     jsr ACIA_GETC
@@ -323,6 +323,6 @@ str_test_cmd:
 
 ;===============================================================================
 .segment "VECTORS"
-    .word $0000
+    .word $0000     ; TODO: Point it back to RESET or to a safe infinite-loop.
     .word RESET
     .word IRQ_HANDLER
