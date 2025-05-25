@@ -43,16 +43,25 @@ page_counter: .res 512
 RESET:
     sei                     ; Set interrupt disable status.
     cld                     ; Clear decimal mode. 
-    ldx #$ff
+    ldx #$ff                ;
     txs                     ; Initialize the stack pointer.
+CLEAR_BSS_SEGMENT:
+    lda #$30                ; BSS starts at $3000
+    sta addr_hi             ; msb = $30
+    stz addr_lo             ; lsb = $00
+CBSS_LOOP:
+    lda #0                  ; We want to clear BSS with zeros.
+    sta (addr_lo)
+    inc addr_lo             ; Increment to next address.
+    bne CBSS_LOOP           ; If we have not reached top, lets do next byte.
+    inc addr_hi             ; Looks like top of low byte was reached. inc high byte.
+    lda addr_hi             ; 
+    cmp #$40                ; Make sure we don't go past $3f
+    beq CBSS_DONE
+    jmp CBSS_LOOP
+CBSS_DONE:
     jsr VIA_INIT
     jsr ACIA_INIT
-    stz counter_in          ; Initialize the input counter.
-    stz serial_in
-    stz uptime_counter
-    stz uptime_hour
-    stz uptime_minutes
-    stz uptime_seconds
     jsr ACIA_PRINTNL
     cli                     ; Clear interrupt disable bit.
     jmp MAIN
@@ -323,6 +332,6 @@ str_test_cmd:
 
 ;===============================================================================
 .segment "VECTORS"
-    .word $0000     ; TODO: Point it back to RESET or to a safe infinite-loop.
+    .word NMI_HANDLER
     .word RESET
     .word IRQ_HANDLER

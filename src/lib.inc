@@ -209,7 +209,7 @@ DUMP_LOOP:
     jsr ACIA_PRINTSP
     ldx #16             ; This is used to track how many bytes per line.
 DATA_LOOP:
-    lda (addr_lo)           ; Indirect. This will auto load addr_hi as part if the address.
+    lda (addr_lo)           ; Indirect. This will auto load addr_hi as part of the address.
     sta value
     jsr BIN_TO_HEX          ; Convert contents of above address to hex.
     lda conversion          ; Print it out.
@@ -235,7 +235,7 @@ DEC_CTR_2:
     dec page_counter + 2
     beq MEMORY_DUMP_DONE
 DEC_TKR:
-    dex
+    dex                     ; Decrement the 16 count counter.
     bne DATA_LOOP
     jsr ACIA_PRINTNL
     jmp DUMP_LOOP
@@ -245,4 +245,3 @@ MEMORY_DUMP_DONE:
     plx
     pla
     rts
-
