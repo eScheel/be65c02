@@ -21,22 +21,23 @@ ticks   = $00
 addr_lo = $01
 addr_hi = $02
 
-; Not Zero Page Variables.
-serial_in    = $200
-shift_in     = $201
-counter_in   = $202
-input_string = $203
+.segment "BSS"
+.align 1            ; (optional) align to byte boundary
+serial_in:    .res 1
+shift_in:     .res 1
+counter_in:   .res 1
+input_string: .res 256
 ; ...
-uptime_counter = $303   
-uptime_seconds = $304   
-uptime_minutes = $305   
-uptime_hour    = $306   
+uptime_counter: .res 1  
+uptime_seconds: .res 1 
+uptime_minutes: .res 1   
+uptime_hour:    .res 1   
 ; ...
-mod10        = $307       ; 2 bytes    
-value        = $309       ; 4 bytes    
-conversion   = $30d       ; 8 bytes
+mod10:      .res 2   
+value:      .res 4  
+conversion: .res 8
 ; ...    
-page_counter = $1000
+page_counter: .res 512
 
 ;=================================================================================
 .segment "START"
