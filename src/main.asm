@@ -22,7 +22,6 @@ addr_lo = $01
 addr_hi = $02
 
 .segment "BSS"
-.align 1            ; (optional) align to byte boundary
 serial_in:    .res 1
 shift_in:     .res 1
 counter_in:   .res 1
@@ -78,8 +77,8 @@ MAIN_LOOP:
     cmp serial_in
     beq PROCESS_BACKSPACE
     lda serial_in       ; Add byte to input string.
-    ldy counter_in
-    sta input_string,Y
+    ldx counter_in
+    sta input_string,X
     inc counter_in      ; Increment the input counter.
     jsr ACIA_PRINTC     ; ECHO the input byte.
     stz serial_in
