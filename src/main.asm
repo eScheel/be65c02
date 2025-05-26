@@ -17,19 +17,20 @@ SKIP_BNE:
 .endmacro
 
 ; Zero Page Variables.
-ticks   = $00
-addr_lo = $01
-addr_hi = $02
+ticks     = $00   ; Used in IRQ_TIMER
+addr_lo   = $01
+addr_hi   = $02
+serial_in = $03
 
 .segment "BSS"
-serial_in:      .res 1
 shift_in:       .res 1
 counter_in:     .res 1
 input_string:   .res 256
 uptime_counter: .res 1  
 uptime_seconds: .res 1 
 uptime_minutes: .res 1   
-uptime_hour:    .res 1   
+uptime_hour:    .res 1
+uptime_days:    .res 2   
 mod10:          .res 2   
 value:          .res 4  
 conversion:     .res 8
@@ -40,27 +41,29 @@ page_counter:   .res 512
 .segment "START"
 RESET:
     sei                     ; Set interrupt disable status.
-    cld                     ; Clear decimal mode. 
-    ldx #$ff                ;
-    txs                     ; Initialize the stack pointer.
-CLEAR_BSS_SEGMENT:
+    cld                     ; Clear decimal mode.
+; Initialize the stack pointer.
+    ldx #$ff                
+    txs                     
+; Initialize BSS Segment data.
     lda #$30                ; BSS starts at $3000
     sta addr_hi             ; msb = $30
     stz addr_lo             ; lsb = $00
-CBSS_LOOP:
+INITBSS_LOOP:
     lda #$00                ; We want to clear BSS with zeros.
     sta (addr_lo)
     inc addr_lo             ; Increment to next address.
-    bne CBSS_LOOP           ; If we have not reached top, lets do next byte.
+    bne INITBSS_LOOP           ; If we have not reached top, lets do next byte.
     inc addr_hi             ; Looks like top of low byte was reached. inc high byte.
     lda addr_hi             ; 
     cmp #$40                ; Make sure we don't go past $3f
-    beq CBSS_DONE
-    jmp CBSS_LOOP
-CBSS_DONE:
+    beq INITBSS_DONE
+    jmp INITBSS_LOOP
+INITBSS_DONE:
+; Initialize IO Chips.
     jsr VIA_INIT
     jsr ACIA_INIT
-    jsr ACIA_PRINTNL
+; Jump to main code.
     cli                     ; Clear interrupt disable bit.
     jmp MAIN
 .include "irq.inc"
@@ -71,6 +74,7 @@ CBSS_DONE:
 
 ;===============================================================================
 MAIN:
+    jsr ACIA_PRINTNL
     lda #'|'
     jsr ACIA_PRINTC
     jsr ACIA_PRINTSP
@@ -92,11 +96,6 @@ MAIN_LOOP:
     jmp MAIN_LOOP
 
 ;===============================================================================
-SKIP_PARSE_CMD:         
-    jsr ACIA_PRINTNL
-    jmp PARSE_CMD_DONE
-
-;===============================================================================
 PROCESS_BACKSPACE:
     lda counter_in      ; Nothing has been typed to delete.
     beq MAIN_LOOP
@@ -112,7 +111,7 @@ PROCESS_INPUT:
     lda #%10001011      ; Disable interrupts on ACIA to not get anymore inputs while processing input.
     sta ACIA_COMMAND
     lda counter_in      ; Check if return key was pressed first.
-    beq SKIP_PARSE_CMD
+    bef PARSE_CMD_DONE
 PARSE_CMD:              ; Parse input string.
     ldx #0
 PARSE_HELP:             ; help
@@ -191,7 +190,6 @@ TEST:
     lda uptime_seconds
     sta VIA_SHIFT
     jsr SHIFT_OUT
-    jsr ACIA_PRINTNL
     jmp PARSE_CMD_DONE
 
 ;===============================================================================
@@ -287,15 +285,37 @@ PA_DONE:
 
 ;=================================================================================
 DISPLAY_UPTIME:
-    jsr ACIA_PRINTNL
     jsr ZERO_VALUE
+    jsr ACIA_PRINTNL
+    ldx #0
+DISPLAY_LOOP:               ; Print System Uptime:
+    lda str_system_uptime,X
+    beq UPTIME_PRINT
+    jsr ACIA_PRINTC
+    inx
+    jmp DISPLAY_LOOP
+UPTIME_PRINT:               ; Convert uptime_days to DEC.
+    lda uptime_days
+    sta value
+    lda uptime_days + 1
+    sta value + 1
+    jsr BIN_TO_DEC
+    ldx #0
+UPTIME_DAYS_LOOP:           ; Print uptime_days
+    lda conversion,X
+    beq UPTIME_PRINTS
+    jsr ACIA_PRINTC
+    inx
+    jmp UPTIME_DAYS_LOOP
 UPTIME_PRINTS:              ; Convert uptime_hour to DEC.
+    lda #':'
+    jsr ACIA_PRINTC
     lda uptime_hour
     sta value
     jsr BIN_TO_DEC
     ldx #0
 UPTIME_HOUR_LOOP:           ; Print uptime_hour.
-    lda conversion,x
+    lda conversion,X
     beq UPTIME_PRINTS2
     jsr ACIA_PRINTC
     inx
@@ -326,9 +346,14 @@ UPTIME_SECONDS_LOOP:        ; Print uptime_seconds
     jsr ACIA_PRINTC
     inx
     jmp UPTIME_SECONDS_LOOP
-UPTIME_PRINTS_DONE:        ; Print CR/LF and done.
-    jsr ACIA_PRINTNL
-    jmp PARSE_CMD_DONE
+UPTIME_PRINTS_DONE:
+    ldx #0
+DISPLAY_LOOP1:                  ; Print DD:HH:MM:SS
+    lda str_uptime_legend,X
+    bef PARSE_CMD_DONE
+    jsr ACIA_PRINTC
+    inx
+    jmp DISPLAY_LOOP1
 
 ;===============================================================================
 .segment "RODATA"
@@ -339,12 +364,15 @@ str_help:
     .byte "uptime - (Prints time since system reset.)",$0D,$0A
     .byte "reset  - (Jumps to reset label.)",$0D,$0A
     .byte "halt   - (Halts the CPU.)",$0D,$0A
-    .byte "test   - (...)",$0D,$0A
-    .byte $00
+    .byte "test   - (...)",$00
 str_halt:
     .byte "System Halted ...",$00
 str_bad_input:
     .byte "Bad input!",$0D,$0A,$00
+str_system_uptime:
+    .byte "System Uptime    {",$00
+str_uptime_legend:
+    .byte "}    D:H:M:S",$00
 str_addr:
     .byte "ADDR >",$00
 str_help_cmd:

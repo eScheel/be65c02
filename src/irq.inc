@@ -35,7 +35,10 @@ IRQ_TIMER:
     lda uptime_hour
     cmp #24                 ; Have we reached a day.
     bne UPDATE_DONE
-    stz uptime_hour          ; roll-over for now I guess TODO: Account for Days eventually.
+    stz uptime_hour
+    inc uptime_days
+    bne UPDATE_DONE
+    inc uptime_days + 1     ; Eventually this will just roll-over. TODO: ...
 UPDATE_DONE:
     lda ticks
     sta uptime_counter       ; Reset the counter.

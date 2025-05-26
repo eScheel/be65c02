@@ -3,14 +3,12 @@ ZERO_MOD10:
     stz mod10
     stz mod10 + 1
     rts
-
 ZERO_VALUE:
     stz value
     stz value + 1
     stz value + 2
     stz value + 3
     rts
-
 ZERO_CONVERSION:
     stz conversion
     stz conversion + 1
@@ -224,8 +222,8 @@ INC_ADDR:
     inc addr_hi             ; This will eventually wrap around to zero.
 DEC_CTR:
     lda page_counter
-    beq DEC_CTR_1
-    dec page_counter          ; Decrement the page counter. 
+    beq DEC_CTR_1           ; If page counter is zero, we need to dec next byte.
+    dec page_counter        ; Decrement the page counter. 
     bne DEC_TKR
 DEC_CTR_1:
     lda page_counter + 1
@@ -241,7 +239,6 @@ DEC_TKR:
     jsr ACIA_PRINTNL        ;
     jmp DUMP_LOOP           ; If zero, then start the next line.
 MEMORY_DUMP_DONE:
-    jsr ACIA_PRINTNL
     ply
     plx
     pla

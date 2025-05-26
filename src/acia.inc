@@ -13,6 +13,15 @@ ACIA_INIT:
     rts
 
 ;===============================================================================
+ACIA_GETC:  ; Data byte received will be put in A register.
+RX_WAIT:
+    lda ACIA_STATUS
+    and #%00001000
+    beq RX_WAIT
+    lda ACIA_DATA
+    rts
+
+;===============================================================================
 ACIA_PRINTC:    ; Caller must put data to send in A register.
     pha
     phx
@@ -28,23 +37,21 @@ TX_DELAY:           ; Since the 6551 has a bug, we need to manually delay.
     rts
 
 ;===============================================================================
-ACIA_PRINTNL:
+ACIA_PRINTNL:   ; Print a New Line Feed.
     pha
-    lda #$0D            ; CR
+    lda #$0D
     jsr ACIA_PRINTC
-    lda #$0A            ; NL
+    lda #$0A
     jsr ACIA_PRINTC
     pla
     rts
-
-ACIA_PRINTSP:
+ACIA_PRINTSP:   ; Print a blank space.
     pha
     lda #' '
     jsr ACIA_PRINTC
     pla
     rts
-
-ACIA_PRINTBS:
+ACIA_PRINTBS:   ; Print a backspace character.
     pha
     lda #$08
     jsr ACIA_PRINTC
@@ -52,13 +59,4 @@ ACIA_PRINTBS:
     lda #$08
     jsr ACIA_PRINTC
     pla
-    rts
-
-;===============================================================================
-ACIA_GETC:  ; Data byte received will be put in A register.
-RX_WAIT:
-    lda ACIA_STATUS
-    and #%00001000
-    beq RX_WAIT
-    lda ACIA_DATA
     rts
