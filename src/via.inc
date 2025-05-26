@@ -25,19 +25,19 @@ VIA_INIT:
     sta VIA_ACR
     lda #$0E        ; Initialize continious timer.
     sta VIA_T1CL
-    lda #$27        ; 270E + 2cycles = 10,000 MicroSeconds or .01 seconds
-    sta VIA_T1CH
+    lda #$27
+    sta VIA_T1CH    ; 270E + 2 cycles ≈ 5 ms @2 MHz
     lda #%11000110  ; Set , T1 , SR, CA1
     sta VIA_IER
     rts
 
 ;===============================================================================
-VIA_WAIT:   ; Caller must put iteration count in X register. X = 20 = 1sec
+VIA_WAIT:   ; Caller must put iteration count in X register. X = 40 = 1sec
     pha
 NEXT_ITERATION:
     lda #$50
     sta VIA_T2CL
-    lda #$C3            ; C350 = 50,000 MicroSeconds or .05 seconds
+    lda #$C3            ; High byte of $C350 = 50 000 ticks = 25 ms @2 MHz
     sta VIA_T2CH
 WAIT_COUNTER:
     lda VIA_IFR         ; Check IFR register to determine source.

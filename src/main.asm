@@ -22,21 +22,19 @@ addr_lo = $01
 addr_hi = $02
 
 .segment "BSS"
-serial_in:    .res 1
-shift_in:     .res 1
-counter_in:   .res 1
-input_string: .res 256
-; ...
+serial_in:      .res 1
+shift_in:       .res 1
+counter_in:     .res 1
+input_string:   .res 256
 uptime_counter: .res 1  
 uptime_seconds: .res 1 
 uptime_minutes: .res 1   
 uptime_hour:    .res 1   
-; ...
-mod10:      .res 2   
-value:      .res 4  
-conversion: .res 8
-; ...    
-page_counter: .res 512
+mod10:          .res 2   
+value:          .res 4  
+conversion:     .res 8
+parsed_address: .res 4
+page_counter:   .res 512
 
 ;=================================================================================
 .segment "START"
@@ -50,7 +48,7 @@ CLEAR_BSS_SEGMENT:
     sta addr_hi             ; msb = $30
     stz addr_lo             ; lsb = $00
 CBSS_LOOP:
-    lda #0                  ; We want to clear BSS with zeros.
+    lda #$00                ; We want to clear BSS with zeros.
     sta (addr_lo)
     inc addr_lo             ; Increment to next address.
     bne CBSS_LOOP           ; If we have not reached top, lets do next byte.
@@ -102,12 +100,7 @@ SKIP_PARSE_CMD:
 PROCESS_BACKSPACE:
     lda counter_in      ; Nothing has been typed to delete.
     beq MAIN_LOOP
-    lda serial_in       ; Should hold the backspace character.
-    jsr ACIA_PRINTC
-    lda #' '            ; Print a blank to emulate backspace.
-    jsr ACIA_PRINTC
-    lda serial_in       ; Need to go back again after printing the blank.
-    jsr ACIA_PRINTC
+    jsr ACIA_PRINTBS    ; Emulate a backspace.
     dec counter_in      ; Decrease input counter.
     stz serial_in       ; Reset input byte.
     jmp MAIN_LOOP
@@ -236,22 +229,59 @@ PRINT_ADDR:             ; Print out "ADDR >" Prompt.
     jsr ACIA_PRINTC
     inx
     jmp PRINT_ADDR
-PARSE_ADDR:             ; Parse the actual address.
+PARSE_ADDR:     ; Parse the actual address from user input.
+    ldx #4      ; Address input byte counter.   getin(byte)
+    ldy #0      ; Address output byte counter.  parsed_address[y]
+PA_LOOP:
     jsr ACIA_GETC
+    cmp #$08    ; Backspace?
+    beq PA_BACK
+    ; Validate hex digit. AI completely wrote this part for me.
+    cmp #'0'
+    bmi  PA_LOOP         ; below '0' → reject
+    cmp #':'             ; one past '9' (':' = 0x3A)
+    bcc  HEX_VALID       ; if A < ':' then it's '0'–'9'
+    cmp #'A'
+    bmi  PA_LOOP         ; between '9' and 'A' → reject
+    cmp #'G'
+    bcc  HEX_VALID       ; if A < 'G' then it's 'A'–'F'  ('G' = 'F'+1)
+    cmp #'a'
+    bmi  PA_LOOP         ; between 'F' and 'a' → reject
+    cmp #'g'
+    bcc  HEX_VALID       ; if A < 'g' then it's 'a'–'f'  ('g' = 'f'+1)
+    jmp  PA_LOOP         ; anything else → reject
+HEX_VALID:  ; END OF AI WRITE.
+    jsr ACIA_PRINTC ; Echo.
+    sta parsed_address,Y
+    dex
+    beq PA_DONE
+    iny
+    jmp PA_LOOP
+PA_BACK:
+    tya                 ; Going to check if Y is still 0. Meaning nothing has been typed.    
+    beq PA_LOOP         ; Just continue to wait for key_press.
+    jsr ACIA_PRINTBS    ; Emulate a backspace.
+    inx
+    dey
+    jmp PA_LOOP
+PA_DONE:
+    ; Fill in the hi byte of the address.
+    lda parsed_address
     sta value
-    jsr ACIA_GETC
+    lda parsed_address + 1
     sta value + 1
     jsr HEX_TO_BIN
     lda conversion
     sta addr_hi
-    jsr ACIA_GETC
+    ; Fill in the low byte of the address.
+    lda parsed_address + 2
     sta value
-    jsr ACIA_GETC
+    lda parsed_address + 3
     sta value + 1
     jsr HEX_TO_BIN
     lda conversion
     sta addr_lo
-    jsr ACIA_PRINTNL
+    ; Call the actual memory dump function.
     jsr MEMORY_DUMP
     jmp PARSE_CMD_DONE
 

@@ -19,7 +19,7 @@ IRQ_TIMER:
     sec
     lda ticks
     sbc uptime_counter
-    cmp #100
+    cmp #200                ; 200 because we are running at 2mhz. 100 = 1mhz. I think.
     bcc IRQ_TIMER_DONE      ; Not another second yet.
     inc uptime_seconds
     lda uptime_seconds   

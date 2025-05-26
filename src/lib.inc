@@ -182,6 +182,7 @@ MEMORY_DUMP:
     pha
     phx
     phy
+    jsr ACIA_PRINTNL
     lda #$ff            ; Fill the variable used to count a page. 512 bytes.
     sta page_counter
     lda #$ff
@@ -235,10 +236,10 @@ DEC_CTR_2:
     dec page_counter + 2
     beq MEMORY_DUMP_DONE
 DEC_TKR:
-    dex                     ; Decrement the 16 count counter.
-    bne DATA_LOOP
-    jsr ACIA_PRINTNL
-    jmp DUMP_LOOP
+    dex                     ; Decrement the 16 count tracker.
+    bne DATA_LOOP           ; If not zero, then keep printing on same line.
+    jsr ACIA_PRINTNL        ;
+    jmp DUMP_LOOP           ; If zero, then start the next line.
 MEMORY_DUMP_DONE:
     jsr ACIA_PRINTNL
     ply

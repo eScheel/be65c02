@@ -20,7 +20,7 @@ ACIA_PRINTC:    ; Caller must put data to send in A register.
 TX_DELAY:           ; Since the 6551 has a bug, we need to manually delay.
     inx
     txa
-    cmp #100        ; Delay 100 Microseconds.        
+    cmp #200        ; Delay 100 Microseconds.        
     bne TX_DELAY
     plx
     pla
@@ -44,6 +44,16 @@ ACIA_PRINTSP:
     pla
     rts
 
+ACIA_PRINTBS:
+    pha
+    lda #$08
+    jsr ACIA_PRINTC
+    jsr ACIA_PRINTSP
+    lda #$08
+    jsr ACIA_PRINTC
+    pla
+    rts
+
 ;===============================================================================
 ACIA_GETC:  ; Data byte received will be put in A register.
 RX_WAIT:
@@ -51,5 +61,4 @@ RX_WAIT:
     and #%00001000
     beq RX_WAIT
     lda ACIA_DATA
-    jsr ACIA_PRINTC     ; ECHO
     rts
