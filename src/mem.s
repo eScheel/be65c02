@@ -71,5 +71,6 @@ MEMORY_DUMP_DONE:
     rts
 
 ;===============================================================================
+; Fill in addr_n when calling.
 MEMORY_WRITE:
     rts
