@@ -17,15 +17,15 @@ SKIP_BNE:
 .endmacro
 
 ; Zero Page Variables.
-ticks     = $00   ; Used in IRQ_TIMER
-addr_lo   = $01
-addr_hi   = $02
-serial_in = $03
+ticks     = $00 ; Used in IRQ_TIMER
+addr_lo   = $01 ; Low byte used in Memory related functions. DUMP / WRITE / BSS.
+addr_hi   = $02 ; High byte used in Memory related functions. DUMP / WRITE / BSS.
+counter_in  = $03   ; ...
+counter_out = $04   ; Used in the input_buffer.
 
 .segment "BSS"
+input_buffer:   .res 256
 shift_in:       .res 1
-counter_in:     .res 1
-input_string:   .res 256
 uptime_counter: .res 1  
 uptime_seconds: .res 1 
 uptime_minutes: .res 1   
@@ -60,17 +60,20 @@ INITBSS_LOOP:
     beq INITBSS_DONE
     jmp INITBSS_LOOP
 INITBSS_DONE:
+    stz ticks
+    stz counter_in
+    stz counter_out
 ; Initialize IO Chips.
     jsr VIA_INIT
     jsr ACIA_INIT
 ; Jump to main code.
     cli                     ; Clear interrupt disable bit.
     jmp MAIN
-.include "irq.inc"
-.include "via.inc"
-.include "sipo.inc"
-.include "acia.inc"
-.include "lib.inc"
+.include "irq.s"
+.include "via.s"
+.include "mem.s"
+.include "acia.s"
+.include "lib.s"
 
 ;===============================================================================
 MAIN:
@@ -79,29 +82,37 @@ MAIN:
     jsr ACIA_PRINTC
     jsr ACIA_PRINTSP
 MAIN_LOOP:
-    lda serial_in       ; Do we have any data?
-    beq MAIN_LOOP
-    lda #$0D            ; Return key pressed?
-    cmp serial_in
+; Wait for input from buffer.
+    lda counter_in
+    cmp counter_out
+    beq MAIN_LOOP           ; If in - out == 0 , we have nothing to process.
+; Process input buffer.
+    ldx counter_out
+    lda input_buffer,X      ; Load current byte of input_buffer. 
+    cmp #$0D                ; Return key pressed?
     beq PROCESS_INPUT
-    lda #$08            ; Backspace key pressed?
-    cmp serial_in
+    cmp #$08                ; Backspace key pressed?
     beq PROCESS_BACKSPACE
-    lda serial_in       ; Add byte to input string.
-    ldx counter_in
-    sta input_string,X
-    inc counter_in      ; Increment the input counter.
-    jsr ACIA_PRINTC     ; ECHO the input byte.
-    stz serial_in
+; ...
+    jsr ACIA_PRINTC         ; ECHO the input byte.
+    inc counter_out         ; Increment the processed counter.
     jmp MAIN_LOOP
 
 ;===============================================================================
 PROCESS_BACKSPACE:
-    lda counter_in      ; Nothing has been typed to delete.
-    beq MAIN_LOOP
-    jsr ACIA_PRINTBS    ; Emulate a backspace.
-    dec counter_in      ; Decrease input counter.
-    stz serial_in       ; Reset input byte.
+    ldx counter_out
+    stz input_buffer,X  ; Remove the BS added by irq at input_buffer[x].
+    lda counter_out       ; How many chars have we echoed?
+    beq @NOOP             ; Nothing to delete, bail out
+    dec                   ; A = counter_out − 1
+    sta counter_out       ; Move your echo pointer back one
+    sta counter_in        ; Also shrink the “in” pointer to match
+    dex                   ; X = counter_out - 1
+    stz input_buffer,X    ; Get rid of the character before the BS as well.
+    jsr ACIA_PRINTBS      ; Emit “\b ␣\b” to erase on-screen
+    jmp MAIN_LOOP
+@NOOP:
+    stz counter_in      ; Just set this to zero since counter_out is zero. irq raises it.
     jmp MAIN_LOOP
 
 ;===============================================================================
@@ -110,14 +121,14 @@ PROCESS_INPUT:
     phx
     lda #%10001011      ; Disable interrupts on ACIA to not get anymore inputs while processing input.
     sta ACIA_COMMAND
-    lda counter_in      ; Check if return key was pressed first.
+    lda counter_out     ; Check if return key was pressed first.
     bef PARSE_CMD_DONE
 PARSE_CMD:              ; Parse input string.
     ldx #0
 PARSE_HELP:             ; help
     lda str_help_cmd,X
     bef HELP
-    cmp input_string,X
+    cmp input_buffer,X
     bne PARSE_DUMP
     inx
     jmp PARSE_HELP
@@ -126,7 +137,7 @@ PARSE_DUMP:             ; dump
 PARSE_DUMP_LOOP:
     lda str_dump_cmd,X
     bef DUMP
-    cmp input_string,X
+    cmp input_buffer,X
     bne PARSE_UPTIME
     inx
     jmp PARSE_DUMP_LOOP
@@ -135,7 +146,7 @@ PARSE_UPTIME:           ; uptime
 PARSE_UPTIME_LOOP:
     lda str_uptime_cmd,X
     bef DISPLAY_UPTIME
-    cmp input_string,X
+    cmp input_buffer,X
     bne PARSE_RESET
     inx
     jmp PARSE_UPTIME_LOOP
@@ -144,7 +155,7 @@ PARSE_RESET:            ; reset
 PARSE_RESET_LOOP:
     lda str_reset_cmd,X
     bef RESET
-    cmp input_string,X
+    cmp input_buffer,X
     bne PARSE_HALT
     inx
     jmp PARSE_RESET_LOOP
@@ -153,7 +164,7 @@ PARSE_HALT:             ; halt
 PARSE_HALT_LOOP:
     lda str_halt_cmd,X
     bef HALT
-    cmp input_string,X
+    cmp input_buffer,X
     bne PARSE_TEST
     inx
     jmp PARSE_HALT_LOOP
@@ -161,8 +172,8 @@ PARSE_TEST:             ; test
     ldx #0
 PARSE_TEST_LOOP:
     lda str_test_cmd,X
-    beq TEST
-    cmp input_string,X
+    bef TEST
+    cmp input_buffer,X
     bne BAD_INPUT
     inx
     jmp PARSE_TEST_LOOP
@@ -176,21 +187,14 @@ PRINT_BAD_INPUT:
     inx
     jmp PRINT_BAD_INPUT
 PARSE_CMD_DONE:
-    stz serial_in
-    stz counter_in
+    jsr ZERO_INPUT      ; Reset the input buffer and counters.
+    stz counter_in      ; ...
+    stz counter_out     ; ...
     lda #%10001001      ; Re-enable interrupts on ACIA.
     sta ACIA_COMMAND
     plx
     pla
     jmp MAIN
-
-;===============================================================================
-TEST:
-    jsr ACIA_PRINTNL
-    lda uptime_seconds
-    sta VIA_SHIFT
-    jsr SHIFT_OUT
-    jmp PARSE_CMD_DONE
 
 ;===============================================================================
 HELP:
@@ -202,20 +206,6 @@ PRINT_HELP:
     jsr ACIA_PRINTC
     inx
     jmp PRINT_HELP
-
-;===============================================================================
-HALT:
-    jsr ACIA_PRINTNL
-    sei                 ; Disable Interrupts.
-    ldx #$0
-HALT_PRINTS:
-    lda str_halt,x      ; Print halted message.
-    beq HALT_LOOP
-    jsr ACIA_PRINTC
-    inx
-    jmp HALT_PRINTS
-HALT_LOOP:
-    jmp HALT_LOOP       ; Jump forever doing nothing.
 
 ;===============================================================================
 DUMP:
@@ -249,12 +239,12 @@ PA_LOOP:
     bcc  HEX_VALID       ; if A < 'g' then it's 'a'–'f'  ('g' = 'f'+1)
     jmp  PA_LOOP         ; anything else → reject
 HEX_VALID:  ; END OF AI WRITE.
-    jsr ACIA_PRINTC ; Echo.
-    sta parsed_address,Y
+    jsr ACIA_PRINTC         ; Echo.
+    sta parsed_address,Y    ; Add to buffer.
     dex
-    beq PA_DONE
+    beq PA_DONE             ; If X is zero, then 4 characters were written.
     iny
-    jmp PA_LOOP
+    jmp PA_LOOP             ; If X is not zero, increment buffer index and continue.
 PA_BACK:
     tya                 ; Going to check if Y is still 0. Meaning nothing has been typed.    
     beq PA_LOOP         ; Just continue to wait for key_press.
@@ -288,59 +278,59 @@ DISPLAY_UPTIME:
     jsr ZERO_VALUE
     jsr ACIA_PRINTNL
     ldx #0
-DISPLAY_LOOP:               ; Print System Uptime:
+DISPLAY_LOOP:                   ; Print System Uptime:
     lda str_system_uptime,X
     beq UPTIME_PRINT
     jsr ACIA_PRINTC
     inx
     jmp DISPLAY_LOOP
-UPTIME_PRINT:               ; Convert uptime_days to DEC.
+UPTIME_PRINT:                   ; Convert uptime_days to DEC.
     lda uptime_days
     sta value
     lda uptime_days + 1
     sta value + 1
     jsr BIN_TO_DEC
     ldx #0
-UPTIME_DAYS_LOOP:           ; Print uptime_days
+UPTIME_DAYS_LOOP:               ; Print uptime_days
     lda conversion,X
     beq UPTIME_PRINTS
     jsr ACIA_PRINTC
     inx
     jmp UPTIME_DAYS_LOOP
-UPTIME_PRINTS:              ; Convert uptime_hour to DEC.
+UPTIME_PRINTS:                  ; Convert uptime_hour to DEC.
     lda #':'
     jsr ACIA_PRINTC
     lda uptime_hour
     sta value
     jsr BIN_TO_DEC
     ldx #0
-UPTIME_HOUR_LOOP:           ; Print uptime_hour.
+UPTIME_HOUR_LOOP:               ; Print uptime_hour.
     lda conversion,X
     beq UPTIME_PRINTS2
     jsr ACIA_PRINTC
     inx
     jmp UPTIME_HOUR_LOOP
-UPTIME_PRINTS2:             ; Convert uptime_minutes to DEC.
+UPTIME_PRINTS2:                 ; Convert uptime_minutes to DEC.
     lda #':'
     jsr ACIA_PRINTC
     lda uptime_minutes
     sta value
     jsr BIN_TO_DEC
     ldx #0
-UPTIME_MINUTES_LOOP:        ; Print uptime_minutes.
+UPTIME_MINUTES_LOOP:            ; Print uptime_minutes.
     lda conversion,x
     beq UPTIME_PRINTS3
     jsr ACIA_PRINTC
     inx
     jmp UPTIME_MINUTES_LOOP
-UPTIME_PRINTS3:             ; Convert uptime_seconds to DEC.
+UPTIME_PRINTS3:                 ; Convert uptime_seconds to DEC.
     lda #':'
     jsr ACIA_PRINTC
     lda uptime_seconds
     sta value
     jsr BIN_TO_DEC
     ldx #0 
-UPTIME_SECONDS_LOOP:        ; Print uptime_seconds
+UPTIME_SECONDS_LOOP:            ; Print uptime_seconds
     lda conversion,x
     beq UPTIME_PRINTS_DONE
     jsr ACIA_PRINTC
@@ -356,23 +346,42 @@ DISPLAY_LOOP1:                  ; Print DD:HH:MM:SS
     jmp DISPLAY_LOOP1
 
 ;===============================================================================
+HALT:
+    jsr ACIA_PRINTNL
+    sei                 ; Disable Interrupts.
+    ldx #$0
+HALT_PRINTS:
+    lda str_halt,x      ; Print halted message.
+    beq HALT_LOOP
+    jsr ACIA_PRINTC
+    inx
+    jmp HALT_PRINTS
+HALT_LOOP:
+    jmp HALT_LOOP       ; Jump forever doing nothing.
+
+;===============================================================================
+TEST:
+    jsr ACIA_PRINTNL
+    jsr MEMORY_WRITE
+    jmp PARSE_CMD_DONE
+
+;===============================================================================
 .segment "RODATA"
 str_help:
     .byte "Possible Commands:",$0D,$0A
     .byte "help   - (Prints this message.)",$0D,$0A
     .byte "dump   - (Dumps contents of memory.)",$0D,$0A
     .byte "uptime - (Prints time since system reset.)",$0D,$0A
-    .byte "reset  - (Jumps to reset label.)",$0D,$0A
     .byte "halt   - (Halts the CPU.)",$0D,$0A
     .byte "test   - (...)",$00
 str_halt:
     .byte "System Halted ...",$00
 str_bad_input:
-    .byte "Bad input!",$0D,$0A,$00
+    .byte "Bad input!",$00
 str_system_uptime:
-    .byte "System Uptime    {",$00
+    .byte "System Uptime: ",$00
 str_uptime_legend:
-    .byte "}    D:H:M:S",$00
+    .byte " (D:H:M:S)",$00
 str_addr:
     .byte "ADDR >",$00
 str_help_cmd:

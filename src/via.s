@@ -19,7 +19,6 @@ VIA_INIT:
     lda #$ff        ; Sett all direction pins to output for now.
     sta VIA_DDRB
     sta VIA_DDRA
-    stz ticks       ; Initialize the timer ticks stored in zero page.
     stz VIA_PCR     ; All negative edge.
     lda #%01001100  ; T1 free-run, T2 one-shot, SR under ext clk, no Latch
     sta VIA_ACR

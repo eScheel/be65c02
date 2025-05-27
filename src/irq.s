@@ -19,7 +19,7 @@ IRQ_TIMER:
     sec
     lda ticks
     sbc uptime_counter
-    cmp #200                ; 200 because we are running at 2mhz. 100 = 1mhz. I think.
+    cmp #200                ; 200 because we are running at 2mhz. 100 = 1mhz.
     bcc IRQ_TIMER_DONE      ; Not another second yet.
     inc uptime_seconds
     lda uptime_seconds   
@@ -47,8 +47,10 @@ IRQ_TIMER_DONE:
     jmp IRQ_FINISHED
 
 IRQ_SERIAL:
-    lda ACIA_DATA
-    sta serial_in       ; Save the input byte.
+    lda ACIA_DATA       ; Load the input byte from the data register on the 551.
+    ldx counter_in
+    sta input_buffer,X  ; Save the input byte to the buffer.
+    inc counter_in      ; Increment the input counter.
     lda ACIA_STATUS     ; This will ack the 551 interrupt.
     lda VIA_PORTA       ; Ack the 6522 interrupt.
     jmp IRQ_FINISHED
