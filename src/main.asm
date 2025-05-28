@@ -17,13 +17,12 @@ SKIP_BNE:
 .endmacro
 
 ; Zero Page Variables.
-ticks    = $00 ; Used in IRQ_TIMER
+ticks    = $00  ; Used in IRQ_TIMER
 shift_in = $01  ; Used in IRQ_SHIFT
 addr_lo = $02 ; Low byte used in Memory related functions. DUMP / WRITE / BSS.
 addr_hi = $03 ; High byte used in Memory related functions. DUMP / WRITE / BSS.
-counter_in  = $04   ; Used with the input_buffer in IRQ_SERIAL.
-counter_out = $05   ; ...
-arrow_pressed = $06 ; ...
+counter_in  = $04  ; Used with the input_buffer in IRQ_SERIAL.
+counter_out = $05  ; ...
 
 .segment "BSS"
 input_buffer:   .res 256
@@ -61,11 +60,11 @@ INITBSS_LOOP:
     beq INITBSS_DONE
     jmp INITBSS_LOOP
 INITBSS_DONE:
+; Initialize zero page memory.
     stz ticks
     stz shift_in
     stz counter_in
     stz counter_out
-    stz arrow_pressed
 ; Initialize IO Chips.
     jsr VIA_INIT
     jsr ACIA_INIT
