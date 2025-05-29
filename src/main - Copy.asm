@@ -102,7 +102,7 @@ MAIN_LOOP:
     jmp MAIN_LOOP
 
 ;===============================================================================
-PROCESS_BACKSPACE:      ; AI Helped me write this.
+PROCESS_BACKSPACE:
     ldx counter_out
     stz input_buffer,X  ; Remove the BS added by irq at input_buffer[x].
     lda counter_out       ; How many chars have we echoed?
