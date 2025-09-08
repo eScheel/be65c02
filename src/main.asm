@@ -9,7 +9,7 @@ SKIP_BEQ:
 .endmacro
 
 ; break not equal far.
-.macro bnf TARGET       ; bne also has a rangte limit.
+.macro bnf TARGET       ; bne also has a range limit.
 .local SKIP_BNE
     beq SKIP_BNE
     jmp TARGET
@@ -19,7 +19,7 @@ SKIP_BNE:
 ; Zero Page Variables.
 ticks    = $00  ; Used in IRQ_TIMER
 shift_in = $01  ; Used in IRQ_SHIFT
-addr_lo = $02 ; Low byte used in Memory related functions. DUMP / WRITE / BSS.
+addr_lo = $02  ; Low byte used in Memory related functions. DUMP / WRITE / BSS.
 addr_hi = $03 ; High byte used in Memory related functions. DUMP / WRITE / BSS.
 counter_in  = $04  ; Used with the input_buffer in IRQ_SERIAL.
 counter_out = $05  ; ...
@@ -81,7 +81,7 @@ INITBSS_DONE:
 ;===============================================================================
 MAIN:
     jsr ACIA_PRINTNL
-    lda #'|'
+    lda #'>'
     jsr ACIA_PRINTC
     jsr ACIA_PRINTSP
 MAIN_LOOP:
@@ -97,6 +97,7 @@ MAIN_LOOP:
     cmp #$08                ; Backspace key pressed?
     beq PROCESS_BACKSPACE
 ; ...
+    sta VIA_PORTA
     jsr ACIA_PRINTC         ; ECHO the input byte.
     inc counter_out         ; Increment the processed counter.
     jmp MAIN_LOOP
@@ -149,7 +150,7 @@ PARSE_UPTIME:           ; uptime
 PARSE_UPTIME_LOOP:
     lda str_uptime_cmd,X
     bef DISPLAY_UPTIME
-    cmp input_buffer,X
+    cmp input_buffer,X    
     bne PARSE_RESET
     inx
     jmp PARSE_UPTIME_LOOP
