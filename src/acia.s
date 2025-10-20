@@ -45,12 +45,16 @@ ACIA_PRINTNL:   ; Print a New Line Feed.
     jsr ACIA_PRINTC
     pla
     rts
+
+;===============================================================================
 ACIA_PRINTSP:   ; Print a blank space.
     pha
     lda #' '
     jsr ACIA_PRINTC
     pla
     rts
+
+;===============================================================================
 ACIA_PRINTBS:   ; Print a backspace character.
     pha
     lda #$08
@@ -60,6 +64,8 @@ ACIA_PRINTBS:   ; Print a backspace character.
     jsr ACIA_PRINTC
     pla
     rts
+
+;===============================================================================
 ACIA_PRINTAB:   ; Print 4 blank spaces.
     jsr ACIA_PRINTSP
     jsr ACIA_PRINTSP

@@ -20,7 +20,7 @@ SKIP_BNE:
 ticks    = $00  ; Used in IRQ_TIMER
 shift_in = $01  ; Used in IRQ_SHIFT
 addr_lo = $02  ; Low byte used in Memory related functions. DUMP / WRITE / BSS.
-addr_hi = $03 ; High byte used in Memory related functions. DUMP / WRITE / BSS.
+addr_hi = $03  ; High byte used in Memory related functions. DUMP / WRITE / BSS.
 counter_in  = $04  ; Used with the input_buffer in IRQ_SERIAL.
 counter_out = $05  ; ...
 
@@ -54,7 +54,7 @@ INITBSS_LOOP:
     lda #$00                ; We want to clear BSS with zeros.
     sta (addr_lo)
     inc addr_lo             ; Increment to next address.
-    bne INITBSS_LOOP           ; If we have not reached top, lets do next byte.
+    bne INITBSS_LOOP        ; If we have not reached top, lets do next byte.
     inc addr_hi             ; Looks like top of low byte was reached. inc high byte.
     lda addr_hi             ; 
     cmp #$40                ; Make sure we don't go past $3f

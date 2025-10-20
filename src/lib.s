@@ -3,12 +3,16 @@ ZERO_MOD10:
     stz mod10
     stz mod10 + 1
     rts
+
+;===============================================================================    
 ZERO_VALUE:
     stz value
     stz value + 1
     stz value + 2
     stz value + 3
     rts
+
+;===============================================================================
 ZERO_CONVERSION:
     stz conversion
     stz conversion + 1
@@ -19,6 +23,8 @@ ZERO_CONVERSION:
     stz conversion + 6
     stz conversion + 7
     rts
+
+;===============================================================================
 ZERO_INPUT:
     pha
     phx
@@ -37,7 +43,8 @@ ZERO_INPUT:
 
 ;===============================================================================
 ; Most code taken from Ben Eater.
-BIN_TO_DEC: ; This will convert up to 16bit value to a 6char decimal string.
+; This will convert up to 16bit value to a 6char decimal string.
+BIN_TO_DEC:
     pha
     phx
     phy
@@ -94,8 +101,8 @@ BTDS_PUSHC_LOOP:
     rts
 
 ;===============================================================================
-; AI helped me write this.
-BIN_TO_HEX: ; This will convert an 8bit binary value to a 2char hex string.
+; This will convert an 8bit binary value to a 2char hex string.
+BIN_TO_HEX:
     pha
     phx
     jsr ZERO_CONVERSION ; Zero out the conversion bytes.
@@ -120,12 +127,13 @@ NIBBLE_TO_HEX:
     cmp #10             ; Is it 0-9 or A-F?
     bmi IS_DIGIT        ; If < 10, it's a digit
     adc #6              ; Adjust for ASCII 'A' 
+
 IS_DIGIT:
     adc #$30            ; Convert to ASCII ('0' or 'A'-'F')
     rts
 
 ;==============================================================================
-; I wrote this. Basically just negated the BIN_TO_HEX function.
+; Basically just negated the BIN_TO_HEX function.
 HEX_TO_BIN:
     pha
     phx
@@ -157,8 +165,8 @@ IS_NOT_CHAR1:
     rts
 
 ;===============================================================================
-; AI wrote this.
-BIN_TO_BIN: ; Converts 8-bit binary in value to binary string in conversion
+; Converts 8-bit binary in value to binary string in conversion
+BIN_TO_BIN:
     pha
     phx
     phy
