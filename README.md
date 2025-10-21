@@ -13,7 +13,7 @@ All the src/*.s files are simply includes for the main.asm file.
 The logic directory contains png files of my address decoding logic created with MS paint.
 
 The minipro-sh folder contains scripts for burning to ROM and connecting to serial IO on NIX* environments.
-One windows I used Xgpro and putty.
+On Windows I used Xgpro and putty.
 
 Big thanks to Ben Eater for enabling me to start and get so far in this project!
 https://eater.net/
