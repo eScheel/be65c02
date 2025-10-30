@@ -18,4 +18,4 @@ On Windows I used Xgpro and putty.
 Big thanks to Ben Eater for enabling me to start and get so far in this project!
 https://eater.net/
 
-I had a lot of fun doing this and hopefully someone can find some code here useful on their learning adventure.
+I had a lot of fun doing this and hopefully someone can find some code here useful.
