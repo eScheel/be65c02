@@ -19,3 +19,5 @@ Big thanks to Ben Eater for enabling me to start and get so far in this project!
 https://eater.net/
 
 I had a lot of fun doing this and hopefully someone can find some code here useful.
+
+![be65c02](https://github.com/user-attachments/assets/dddd19e3-36c7-4253-a0d8-b0ce1524a231)
